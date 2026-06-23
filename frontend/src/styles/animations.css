@@ -1,0 +1,198 @@
+/* ============================================================
+ * OrbitalCommand · 动效系统
+ * ------------------------------------------------------------
+ *  设计目标
+ *    1. 所有过渡 ≥ 60fps（仅动画 transform / opacity / filter）
+ *    2. 页面切换 ≤ 300ms（无感知快速切换）
+ *    3. 统一动效参数：时长 / 缓动 / 触发条件
+ *
+ *  统一令牌（与 variables.css 保持一致）
+ *    --dur-instant   80ms   · 即时反馈（按钮按下、勾选）
+ *    --dur-fast     160ms   · 悬停、颜色、边框等单属性切换
+ *    --dur-base     220ms   · 入场、退场、显隐
+ *    --dur-page     260ms   · 页面切换（≤ 300ms 目标）
+ *    --dur-slow     420ms   · 抽屉、模态、复杂编排
+ *    --ease         cubic-bezier(.2,.7,.2,1)        · 通用
+ *    --ease-out     cubic-bezier(.16,1,.3,1)        · 入场
+ *    --ease-in      cubic-bezier(.7,0,.84,0)        · 退场
+ *    --ease-spring  cubic-bezier(.34,1.56,.64,1)    · 弹性
+ * ============================================================ */
+
+/* ============== 1. 页面切换（< 300ms 目标） ============== */
+/* 仅 GPU 加速属性：transform + opacity，无 layout / paint 开销 */
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity var(--dur-page) var(--ease-out),
+    transform var(--dur-page) var(--ease-out);
+  will-change: opacity, transform;
+}
+.page-enter-from { opacity: 0; transform: translate3d(0, 6px, 0); }
+.page-leave-to   { opacity: 0; transform: translate3d(0, -4px, 0); }
+
+/* ============== 2. 路由淡入（备用） ============== */
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity var(--dur-page) var(--ease-out),
+    transform var(--dur-page) var(--ease-out);
+  will-change: opacity, transform;
+}
+.fade-enter-from { opacity: 0; transform: translate3d(0, 6px, 0); }
+.fade-leave-to   { opacity: 0; transform: translate3d(0, -4px, 0); }
+
+/* ============== 3. 通用淡入 ============== */
+.fade-in {
+  animation: fadeIn var(--dur-slow) var(--ease-out) both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.view-enter {
+  animation: viewEnter 0.42s var(--ease-out) both;
+}
+@keyframes viewEnter {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* ============== 4. 弹性进入 ============== */
+.bounce-in {
+  animation: bounceIn 420ms var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ============== 5. 流光 ============== */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    var(--color-bg-soft) 0%,
+    rgba(139, 92, 246, 0.18) 50%,
+    var(--color-bg-soft) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* ============== 6. 慢速旋转 ============== */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1.2s linear infinite; }
+
+/* ============== 7. 脉冲 / 在线状态 ============== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+  animation: livePulse 1.6s var(--ease) infinite;
+}
+@keyframes livePulse {
+  0%   { box-shadow: 0 0 0 0   rgba(52, 211, 153, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(52, 211, 153, 0); }
+}
+
+@keyframes livePing {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ============== 8. 浮起 ============== */
+.lift {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+.lift:hover {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============== 9. 抽屉 / 模态（统一标准） ============== */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition:
+    transform var(--dur-slow) var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out);
+  will-change: transform, opacity;
+}
+.drawer-enter-from,
+.drawer-leave-to {
+  transform: translate3d(100%, 0, 0);
+  opacity: 0;
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-spring);
+  will-change: opacity, transform;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.popover-enter-active,
+.popover-leave-active {
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+  will-change: opacity, transform;
+}
+.popover-enter-from,
+.popover-leave-to {
+  opacity: 0;
+  transform: translate3d(0, -6px, 0);
+}
+
+/* ============== 10. 通用过渡 ============== */
+.tx-base {
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color           var(--dur-fast) var(--ease),
+    border-color    var(--dur-fast) var(--ease),
+    box-shadow      var(--dur-fast) var(--ease),
+    transform       var(--dur-fast) var(--ease);
+}
+
+/* ============== 11. 性能工具类（按需启用 GPU 合成） ============== */
+.gpu {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ============== 12. 用户偏好：减少动效 ============== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .live-dot,
+  .cosmos-orbit,
+  .cosmos-aurora,
+  .cosmos-stars,
+  .nav__count--live::after {
+    animation: none !important;
+  }
+}

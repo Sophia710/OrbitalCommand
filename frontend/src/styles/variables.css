@@ -1,0 +1,182 @@
+/* ============================================================
+ * OrbitalCommand · Design Tokens
+ * ------------------------------------------------------------
+ *  与 prototype copy 保持一致的设计令牌
+ *  配色 / 字体 / 间距 / 圆角 / 阴影 / 动效
+ * ============================================================ */
+
+:root {
+  /* --- 主品牌色 --- */
+  --accent: #8b5cf6;
+  --accent-2: #d946ef;
+  --accent-soft: rgba(139, 92, 246, 0.14);
+  --accent-glow: rgba(139, 92, 246, 0.45);
+
+  /* --- 背景层级 --- */
+  --bg: #07080f;
+  --bg-2: #0b0d18;
+  --cosmos-grid-color: rgba(255, 255, 255, 0.03);
+
+  /* --- 表面（玻璃态）--- */
+  --surface: rgba(20, 22, 38, 0.78);
+  --surface-2: rgba(28, 31, 51, 0.62);
+  --surface-3: rgba(36, 40, 64, 0.55);
+
+  /* --- 描边 --- */
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.12);
+
+  /* --- 文字色阶 --- */
+  --ink: #e8ebf5;
+  --ink-2: #aab0c8;
+  --ink-3: #6f7592;
+  --ink-4: #4a5070;
+
+  /* --- 语义状态色 --- */
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --info: #22d3ee;
+  --magenta: #e879f9;
+
+  /* --- 圆角 --- */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+
+  /* --- 阴影 --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 24px rgba(139, 92, 246, 0.32);
+
+  /* --- 玻璃态模糊 --- */
+  --glass-blur: blur(22px) saturate(140%);
+
+  /* --- 字体 --- */
+  --font-display: "Sora", "Noto Sans SC", system-ui, sans-serif;
+  --font-body: "Manrope", "Noto Sans SC", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* --- 字号 --- */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --fs-40: 40px;
+
+  /* --- 间距 --- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* --- 布局尺寸 --- */
+  --sidebar-w:        280px;
+  --sidebar-w-mini:   76px;
+  --topbar-h:         64px;
+  --content-max-w:    1640px;
+  --content-pad:      28px;
+
+  /* --- 动效（统一规范，详见 animations.css）--- */
+  --ease:           cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:        cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 侧边栏展收：自然加速与减速，避开首尾停顿 */
+  --ease-soft:      cubic-bezier(0.45, 0, 0.55, 1);
+
+  /* 时长分级：60fps 优化目标，页面切换 ≤ 300ms */
+  --dur-instant:    80ms;   /* 即时反馈（按下/勾选） */
+  --dur-fast:       160ms;  /* 悬停、颜色、边框等 */
+  --dur-base:       220ms;  /* 入场、退场、显隐 */
+  --dur-page:       260ms;  /* 页面切换主时长（≤300ms） */
+  --dur-slow:       420ms;  /* 抽屉、模态、复杂编排 */
+  /* 侧边栏展收：在 0.1~0.2s 最佳区间，展开/收起时间一致 */
+  --dur-side:       180ms;
+
+  /* 旧别名（向后兼容） */
+  --tx-fast:        var(--dur-fast);
+  --tx:             var(--dur-slow);
+  --tx-slow:        480ms;
+}
+
+/* --- 浅色主题覆盖 --- */
+[data-theme='light'] {
+  --bg: #f5f5fb;
+  --bg-2: #eeeef6;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface-2: rgba(248, 249, 255, 0.8);
+  --surface-3: rgba(240, 241, 250, 0.85);
+  --line: rgba(15, 18, 38, 0.08);
+  --line-2: rgba(15, 18, 38, 0.14);
+  --ink: #0f1226;
+  --ink-2: #3d4163;
+  --ink-3: #6a6f8e;
+  --ink-4: #9ea3bf;
+  --shadow: 0 12px 40px rgba(20, 20, 50, 0.08), 0 2px 6px rgba(20, 20, 50, 0.04);
+  --shadow-lg: 0 30px 80px rgba(20, 20, 50, 0.12);
+  --cosmos-grid-color: rgba(15, 18, 38, 0.04);
+}
+
+/* --- 主题切换过渡（防闪烁）--- */
+html.is-theme-transitioning,
+html.is-theme-transitioning *,
+html.is-theme-transitioning *::before,
+html.is-theme-transitioning *::after {
+  transition: background-color 0.22s var(--ease),
+              color 0.22s var(--ease),
+              border-color 0.22s var(--ease),
+              box-shadow 0.22s var(--ease),
+              fill 0.22s var(--ease),
+              stroke 0.22s var(--ease) !important;
+}
+
+/* --- 向后兼容别名（保留旧项目中使用过的命名）--- */
+:root,
+[data-theme='light'] {
+  --color-bg:           var(--bg);
+  --color-bg-elevated:  var(--bg-2);
+  --color-bg-soft:      var(--surface-2);
+  --color-bg-glass:     var(--surface);
+  --color-text:         var(--ink);
+  --color-text-soft:    var(--ink-2);
+  --color-text-mute:    var(--ink-3);
+  --color-border:       var(--line);
+  --color-border-soft:  var(--line-2);
+  --color-divider:      var(--line);
+  --color-primary:      var(--accent);
+  --color-primary-soft: var(--accent-2);
+  --color-cyan:         var(--info);
+  --color-amber:        var(--warn);
+  --color-rose:         var(--danger);
+  --color-emerald:      var(--ok);
+  --color-lime:         #a3e635;
+  --color-blue:         #3b82f6;
+  --color-teal:         #14b8a6;
+  --color-violet:       var(--accent-2);
+  --color-success:      var(--ok);
+  --color-warning:      var(--warn);
+  --color-danger:       var(--danger);
+  --color-info:         var(--info);
+  --color-success-bg:   rgba(52, 211, 153, 0.12);
+  --color-warning-bg:   rgba(251, 191, 36, 0.12);
+  --color-danger-bg:    rgba(248, 113, 113, 0.14);
+  --color-info-bg:      rgba(34, 211, 238, 0.12);
+}

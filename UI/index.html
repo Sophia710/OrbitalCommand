@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OrbitalCommand · 卫星互联网超级数字员工</title>
+<meta name="description" content="面向卫星运营商的智能化测试与运营平台" />
+<script>
+  // 主题防闪烁：在样式表加载前恢复用户偏好
+  (function () {
+    try {
+      var t = localStorage.getItem('oc_theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+<link rel="stylesheet" href="assets/fonts.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<!-- ============== ANIMATED BACKGROUND LAYER ============== -->
+<div class="cosmos-bg" aria-hidden="true">
+  <div class="cosmos-grid"></div>
+  <div class="cosmos-stars"></div>
+  <div class="cosmos-orbit cosmos-orbit--1"></div>
+  <div class="cosmos-orbit cosmos-orbit--2"></div>
+  <div class="cosmos-orbit cosmos-orbit--3"></div>
+  <div class="cosmos-aurora"></div>
+</div>
+
+<!-- ============== APP SHELL ============== -->
+<div class="app" id="app">
+
+  <!-- ======= SIDEBAR ======= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand__logo" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="3" class="brand__core"/>
+          <ellipse cx="20" cy="20" rx="14" ry="5" class="brand__ring brand__ring--1" transform="rotate(30 20 20)"/>
+          <ellipse cx="20" cy="20" rx="14" ry="5" class="brand__ring brand__ring--2" transform="rotate(-30 20 20)"/>
+          <ellipse cx="20" cy="20" rx="14" ry="5" class="brand__ring brand__ring--3"/>
+          <circle cx="32" cy="13" r="1.5" class="brand__sat"/>
+          <circle cx="9"  cy="27" r="1"   class="brand__sat"/>
+        </svg>
+      </div>
+      <div class="brand__text">
+        <div class="brand__title">OrbitalCommand</div>
+        <div class="brand__subtitle">卫星互联网 · 数字员工</div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav" aria-label="主导航">
+      <a class="nav__item is-active" data-route="dashboard" href="#dashboard">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
+        <span class="nav__label">指挥中心</span>
+        <span class="nav__pulse"></span>
+      </a>
+      <a class="nav__item" data-route="plaza" href="#plaza">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M14 20c0-2 2-3.5 4-3.5s4 1.5 4 3.5"/></svg></span>
+        <span class="nav__label">员工广场</span>
+        <span class="nav__count">7</span>
+      </a>
+      <a class="nav__item" data-route="my" href="#my">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span class="nav__label">我的员工</span>
+        <span class="nav__count">3</span>
+      </a>
+      <a class="nav__item" data-route="create" href="#create">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></span>
+        <span class="nav__label">创建员工</span>
+      </a>
+      <a class="nav__item" data-route="data" href="#data">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-7"/></svg></span>
+        <span class="nav__label">数据应用</span>
+        <span class="nav__count">12</span>
+      </a>
+      <a class="nav__item" data-route="files" href="#files">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></span>
+        <span class="nav__label">文件中心</span>
+        <span class="nav__count">24</span>
+      </a>
+      <a class="nav__item" data-route="tasks" href="#tasks">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg></span>
+        <span class="nav__label">任务监控</span>
+        <span class="nav__count nav__count--live">2</span>
+      </a>
+    </nav>
+
+    <div class="sidebar__divider"></div>
+
+    <nav class="sidebar__nav" aria-label="管理导航">
+      <a class="nav__item" data-route="review" href="#review">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <span class="nav__label">审核中心</span>
+        <span class="nav__count">5</span>
+      </a>
+      <a class="nav__item" data-route="audit" href="#audit">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+        <span class="nav__label">审计日志</span>
+      </a>
+      <a class="nav__item" data-route="settings" href="#settings">
+        <span class="nav__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.16.66.43.86.77s.27.71.24 1.09c.6.16 1.07.66 1.27 1.27.2.6.13 1.27-.24 1.82l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z"/></svg></span>
+        <span class="nav__label">系统设置</span>
+      </a>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="system-card">
+        <div class="system-card__row">
+          <span class="system-card__label">系统状态</span>
+          <span class="status-pill status-pill--ok"><span class="status-pill__dot"></span>运行中</span>
+        </div>
+        <div class="system-card__metric">
+          <div class="metric-mini">
+            <span class="metric-mini__label">CPU</span>
+            <div class="metric-mini__bar"><span style="--w:42%"></span></div>
+            <span class="metric-mini__val">42%</span>
+          </div>
+          <div class="metric-mini">
+            <span class="metric-mini__label">GPU</span>
+            <div class="metric-mini__bar"><span style="--w:68%;--c:var(--accent)"></span></div>
+            <span class="metric-mini__val">68%</span>
+          </div>
+          <div class="metric-mini">
+            <span class="metric-mini__label">存储</span>
+            <div class="metric-mini__bar"><span style="--w:31%"></span></div>
+            <span class="metric-mini__val">31%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======= MAIN ======= -->
+  <main class="main">
+    <!-- ======= TOPBAR ======= -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <button class="iconbtn" id="sidebarToggle" aria-label="折叠侧边栏">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="breadcrumb">
+          <span class="breadcrumb__item" data-route="dashboard">工作台</span>
+          <span class="breadcrumb__sep">/</span>
+          <span class="breadcrumb__item breadcrumb__item--current" id="breadcrumbCurrent">指挥中心</span>
+        </div>
+      </div>
+
+      <div class="topbar__search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="搜索员工、Skill、知识库、文档…" />
+        <kbd>⌘K</kbd>
+      </div>
+
+      <div class="topbar__right">
+        <button class="iconbtn iconbtn--badge" aria-label="通知">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="iconbtn__badge">3</span>
+        </button>
+        <button class="iconbtn" id="helpBtn" aria-label="帮助" title="帮助中心">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        </button>
+        <button class="iconbtn" id="themeToggle" aria-label="切换主题" title="切换浅色 / 深色">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="iconbtn" id="settingsBtn" aria-label="设置" title="系统设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.16.66.43.86.77s.27.71.24 1.09c.6.16 1.07.66 1.27 1.27.2.6.13 1.27-.24 1.82l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z"/></svg>
+        </button>
+        <button class="iconbtn" id="logoutBtn" aria-label="退出" title="退出登录">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </button>
+        <div class="user-chip">
+          <div class="avatar">
+            <span>LZ</span>
+            <i class="avatar__status"></i>
+          </div>
+          <div class="user-chip__text">
+            <div class="user-chip__name">李正</div>
+            <div class="user-chip__role">运营主管</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======= CONTENT VIEWS ======= -->
+    <div class="content" id="content">
+      <!-- All view placeholders. Real content is rendered by app.js using mock data. -->
+    </div>
+  </main>
+</div>
+
+<!-- ============== MODAL: EMPLOYEE DETAIL (lazy injected) ============== -->
+<div class="modal" id="modalRoot" aria-hidden="true"></div>
+
+<!-- ============== TOAST ============== -->
+<div class="toast" id="toastRoot" aria-live="polite"></div>
+
+<!-- ============== SCRIPTS ============== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

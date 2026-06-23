@@ -1,0 +1,12 @@
+/* OrbitalCommand · 本地字体栈（离线优先） */
+/* 优先使用 CDN 字体（在线环境）；离线时回退到系统字体。 */
+
+/* Sora / Manrope / JetBrains Mono · 拉丁与西文 */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&display=swap');
+
+:root {
+  --font-sans: 'Sora', 'Manrope', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  /* 衬线:用于档案 / 卡片标题,营造"图书馆"质感 */
+  --font-serif: 'Fraunces', 'Source Han Serif SC', 'Songti SC', 'SimSun', 'Noto Serif CJK SC', Georgia, serif;
+}

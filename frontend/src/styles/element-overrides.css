@@ -1,0 +1,129 @@
+/* ============================================================
+ * Element Plus · 暗色覆盖
+ * ============================================================ */
+
+/* Card */
+.el-card {
+  --el-card-bg-color: var(--color-bg-elevated) !important;
+  --el-card-border-color: var(--color-border) !important;
+  border-radius: var(--r-lg) !important;
+}
+
+/* Button */
+.el-button {
+  border-radius: var(--r-md) !important;
+  font-weight: 500 !important;
+  transition: all var(--dur-fast) var(--ease) !important;
+}
+.el-button--primary {
+  --el-button-bg-color: var(--color-primary) !important;
+  --el-button-border-color: var(--color-primary) !important;
+  --el-button-hover-bg-color: var(--color-primary-soft) !important;
+  --el-button-hover-border-color: var(--color-primary-soft) !important;
+}
+
+/* Table */
+.el-table {
+  --el-table-bg-color: transparent !important;
+  --el-table-tr-bg-color: transparent !important;
+  --el-table-header-bg-color: var(--color-bg-soft) !important;
+  --el-table-border-color: var(--color-border) !important;
+  --el-table-row-hover-bg-color: rgba(139, 92, 246, 0.08) !important;
+  --el-table-text-color: var(--color-text) !important;
+  --el-table-header-text-color: var(--color-text-soft) !important;
+  border-radius: var(--r-md) !important;
+  overflow: hidden;
+}
+.el-table th.el-table__cell {
+  font-weight: 600;
+  font-size: var(--fs-12);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-mute) !important;
+}
+
+/* Dialog */
+.el-dialog {
+  --el-dialog-bg-color: var(--color-bg-elevated) !important;
+  --el-dialog-border-radius: var(--r-lg) !important;
+  border: 1px solid var(--color-border);
+}
+
+/* Drawer */
+.el-drawer {
+  --el-drawer-bg-color: var(--color-bg-elevated) !important;
+}
+
+/* Menu */
+.el-menu {
+  --el-menu-bg-color: transparent !important;
+  --el-menu-text-color: var(--color-text-soft) !important;
+  --el-menu-hover-bg-color: rgba(139, 92, 246, 0.10) !important;
+  --el-menu-active-color: var(--color-text) !important;
+  border-right: none !important;
+}
+
+/* Form */
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background: var(--color-bg-soft) !important;
+  box-shadow: 0 0 0 1px var(--color-border) inset !important;
+  border-radius: var(--r-md) !important;
+  transition: box-shadow var(--dur-fast) var(--ease) !important;
+}
+.el-input__wrapper:hover,
+.el-select__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--color-primary-soft) inset !important;
+}
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px var(--color-primary) inset !important;
+}
+
+/* Tag */
+.el-tag {
+  border-radius: var(--r-pill) !important;
+  border: none !important;
+}
+
+/* Pagination */
+.el-pagination {
+  --el-pagination-bg-color: transparent !important;
+  --el-pagination-button-color: var(--color-text-soft) !important;
+  --el-pagination-hover-color: var(--color-primary-soft) !important;
+  justify-content: flex-end;
+}
+
+/* Tooltip */
+.el-popper.is-dark {
+  --el-tooltip-bg-color: rgba(20, 22, 40, 0.95) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Notification / Message */
+.el-message {
+  background: var(--color-bg-elevated) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+/* Switch */
+.el-switch {
+  --el-switch-on-color: var(--color-primary) !important;
+  --el-switch-off-color: var(--color-bg-soft) !important;
+}
+
+/* Slider */
+.el-slider {
+  --el-slider-main-bg-color: var(--color-primary) !important;
+}
+
+/* Progress */
+.el-progress-bar__outer {
+  background: var(--color-bg-soft) !important;
+  border-radius: var(--r-pill) !important;
+}
+.el-progress-bar__inner {
+  border-radius: var(--r-pill) !important;
+}

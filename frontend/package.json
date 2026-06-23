@@ -1,0 +1,30 @@
+{
+  "name": "orbitalcommand-sat-digital-employee",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "OrbitalCommand · 卫星互联网数字员工平台 · Vite + Vue3 + Element Plus 重构版",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "test:filter": "node __test_matchfilter.js",
+    "test:plaza": "node __test_plaza_integration.js",
+    "test:regression": "node __test_regression.js",
+    "test": "node __test_matchfilter.js && node __test_plaza_integration.js && node __test_regression.js"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.7",
+    "echarts": "^5.5.1",
+    "element-plus": "^2.8.4",
+    "pinia": "^2.2.4",
+    "vue": "^3.5.0",
+    "vue-echarts": "^7.0.3",
+    "vue-router": "^4.4.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.4",
+    "vite": "^5.4.8"
+  }
+}
