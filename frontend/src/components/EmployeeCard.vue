@@ -102,22 +102,19 @@ const emit = defineEmits(['hire', 'release'])
 const initial = computed(() => (props.employee.name || '?').slice(0, 1))
 
 /* ============================================================
- * 三级分类 · 视觉差异化
+ * 二级分类 · 视觉差异化
  *  - super         超级员工：金色渐变 + 旗舰角标 + 强发光
- *  - professional  专业员工：品牌紫渐变（原方案）
- *  - general       通用智能体：冷蓝渐变 + 中性边
+ *  - professional  专业员工：品牌紫渐变
  * ============================================================ */
 const tierKey = computed(() => {
   const k = props.employee.kind
   if (k === 'super') return 'super'
-  if (k === 'professional') return 'professional'
-  return 'general'
+  return 'professional'
 })
 
 const tierLabel = computed(() => {
   if (tierKey.value === 'super') return '超级员工'
-  if (tierKey.value === 'professional') return '专业员工'
-  return '通用智能体'
+  return '专业员工'
 })
 
 /* 超级员工的 4 大固定系列名 */
@@ -127,20 +124,15 @@ const seriesLabel = computed(() => {
   return hit ? hit.label : ''
 })
 
-/* 头像渐变按级别走：super = 极光靛紫 / professional = 品牌紫 / general = 冷蓝 */
+/* 头像渐变按级别走：super = 极光靛紫 / professional = 品牌紫 */
 const avatarStyle = computed(() => {
   if (tierKey.value === 'super') {
     return {
       background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%)',
     }
   }
-  if (tierKey.value === 'professional') {
-    return {
-      background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
-    }
-  }
   return {
-    background: 'linear-gradient(135deg, #3b82f6 0%, #22d3ee 100%)',
+    background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
   }
 })
 
@@ -219,14 +211,6 @@ function formatCalls(n) {
     transparent 100%);
   opacity: 0.7;
 }
-.emp-card--general .emp-card__bar {
-  background: linear-gradient(90deg,
-    transparent 0%,
-    #3b82f6 35%,
-    #22d3ee 65%,
-    transparent 100%);
-  opacity: 0.6;
-}
 
 /* ---------- 角标：旗舰 ---------- */
 .emp-card__corner {
@@ -261,12 +245,6 @@ function formatCalls(n) {
   border-color: rgba(139, 92, 246, 0.35);
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32),
               0 0 0 1px rgba(139, 92, 246, 0.12);
-}
-.emp-card--general:hover {
-  transform: translateY(-1px);
-  border-color: rgba(34, 211, 238, 0.32);
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32),
-              0 0 0 1px rgba(34, 211, 238, 0.1);
 }
 
 .emp-card__head {
@@ -438,14 +416,6 @@ function formatCalls(n) {
 .emp-card__tag--professional .emp-card__tag-dot {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
-.emp-card__tag--general {
-  background: rgba(34, 211, 238, 0.12);
-  color: #67e8f9;
-  border-color: rgba(34, 211, 238, 0.3);
-}
-.emp-card__tag--general .emp-card__tag-dot {
-  background: linear-gradient(135deg, #3b82f6, #22d3ee);
-}
 
 /* ---------- 描述 ---------- */
 .emp-card__desc {
@@ -506,16 +476,6 @@ function formatCalls(n) {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: rgba(139, 92, 246, 0.5);
-}
-.emp-card--general .emp-card__cap {
-  background: rgba(34, 211, 238, 0.05);
-  color: var(--ink-2);
-  border-color: rgba(34, 211, 238, 0.15);
-}
-.emp-card--general .emp-card__cap:hover {
-  background: rgba(34, 211, 238, 0.12);
-  color: #67e8f9;
-  border-color: rgba(34, 211, 238, 0.5);
 }
 
 /* ---------- 元信息 ---------- */

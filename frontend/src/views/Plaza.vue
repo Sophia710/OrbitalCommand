@@ -4,11 +4,10 @@
     <section class="plaza-hero">
       <div class="plaza-hero__text">
         <h3>员工广场 · 探索与订阅数字员工</h3>
-        <p>面向卫星互联网场景的旗舰 / 专业 / 通用三类数字员工，覆盖终端 / 星地链路 / 载荷 / 全链路四大领域。订阅后可加入我的员工，与团队共享使用。</p>
+        <p>面向卫星互联网场景的旗舰 / 专业两类数字员工，覆盖终端 / 星地链路 / 载荷 / 全链路四大领域。订阅后可加入我的员工，与团队共享使用。</p>
         <div class="plaza-hero__stats">
           <div><b>{{ countOf('super') }}</b><span>超级员工</span></div>
           <div><b>{{ countOf('professional') }}</b><span>专业员工</span></div>
-          <div><b>{{ countOf('general') }}</b><span>通用智能体</span></div>
         </div>
       </div>
       <div class="plaza-hero__art">
@@ -16,7 +15,7 @@
           <div class="float-card float-card--1">🛰 超级员工</div>
           <div class="float-card float-card--2">🜲 星地网络</div>
           <div class="float-card float-card--3">⏚ 卫星载荷</div>
-          <div class="float-card float-card--4">⌬ 通用能力</div>
+          <div class="float-card float-card--4">⏵ 全链路</div>
         </div>
       </div>
     </section>
@@ -89,7 +88,7 @@
             </span>
             <div>
               <h4>超级员工 <span class="plaza-section__count">{{ grouped.super.length }}</span></h4>
-              <p>旗舰综合能力体 · 4 大固定类别 · 端到端智能化</p>
+              <p>旗舰综合能力体 · 端到端智能化</p>
             </div>
           </div>
           <span class="plaza-section__pill">S · TIER</span>
@@ -145,41 +144,6 @@
           </div>
         </div>
       </section>
-
-      <!-- 通用智能体 -->
-      <section v-if="grouped.general.length" class="plaza-section plaza-section--general">
-        <header class="plaza-section__head">
-          <div class="plaza-section__title">
-            <span class="plaza-section__icon plaza-section__icon--general">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/>
-                <circle cx="12" cy="14" r="2"/>
-              </svg>
-            </span>
-            <div>
-              <h4>通用智能体 <span class="plaza-section__count">{{ grouped.general.length }}</span></h4>
-              <p>通用能力 · 即开即用 · 报告 / 数据 / 检索 / 翻译</p>
-            </div>
-          </div>
-          <span class="plaza-section__pill">B · TIER</span>
-        </header>
-        <div class="plaza-grid">
-          <div
-            v-for="e in grouped.general"
-            :key="e.id"
-            :id="`emp-${e.id}`"
-            class="plaza-grid__item"
-          >
-            <EmployeeCard
-              :employee="e"
-              :hireable="!isHired(e.id)"
-              :super-series="superSeries"
-              @hire="onHire"
-              @release="onRelease"
-            />
-          </div>
-        </div>
-      </section>
     </div>
 
     <div v-else-if="!loading" class="plaza-empty">
@@ -216,12 +180,11 @@ const loading = ref(false)
 const superSeries = ref([])
 let searchTimer = null
 
-/* 三级 Tab · 全部 / 超级员工 / 专业员工 / 通用智能体 */
+/* 二级分类 Tab · 全部 / 超级员工 / 专业员工 */
 const tabs = computed(() => [
   { value: '',             label: '全部',     count: total.value,         tone: '' },
   { value: 'super',        label: '超级员工', count: countOf('super'),    tone: 'super' },
   { value: 'professional', label: '专业员工', count: countOf('professional'), tone: 'professional' },
-  { value: 'general',      label: '通用员工', count: countOf('general'),  tone: 'general' },
 ])
 
 function countOf(kind) {
@@ -234,7 +197,7 @@ const domainOpts = [
   { value: '星地链路',   label: '星地链路' },
   { value: '载荷',       label: '载荷' },
   { value: '全链路',     label: '全链路' },
-  { value: '通用',       label: '通用' },
+  { value: '运维',       label: '运维' },
 ]
 
 const sortOpts = [
@@ -244,19 +207,17 @@ const sortOpts = [
   { value: 'newest',  label: '按最新' },
 ]
 
-/* 按级别分组并保持稳定的展示顺序：super → professional → general */
+/* 按级别分组并保持稳定的展示顺序：super → professional */
 const grouped = computed(() => {
   const superList = []
   const proList = []
-  const genList = []
   list.value.forEach((e) => {
     if (e.kind === 'super') superList.push(e)
     else if (e.kind === 'professional') proList.push(e)
-    else genList.push(e)
   })
   /* 超级员工按 tier 升序展示，保证固定 4 大类别顺序 */
   superList.sort((a, b) => (a.tier || 99) - (b.tier || 99))
-  return { super: superList, professional: proList, general: genList }
+  return { super: superList, professional: proList }
 })
 
 async function load() {
@@ -507,11 +468,7 @@ onMounted(async () => {
 .plaza-tab--professional .plaza-tab__dot {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
-.plaza-tab--general .plaza-tab__dot {
-  background: linear-gradient(135deg, #3b82f6, #22d3ee);
-}
 .plaza-tab--super.is-active span { background: rgba(139, 92, 246, 0.12); color: var(--ink); }
-.plaza-tab--general.is-active span { background: rgba(34, 211, 238, 0.18); color: #67e8f9; }
 .plaza-tab--super.is-active { box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3); }
 
 .plaza-search {
@@ -645,9 +602,6 @@ onMounted(async () => {
 .plaza-section--professional .plaza-section__head::before {
   background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
 }
-.plaza-section--general .plaza-section__head::before {
-  background: linear-gradient(180deg, #3b82f6 0%, #22d3ee 100%);
-}
 .plaza-section__title {
   display: flex;
   align-items: center;
@@ -675,11 +629,6 @@ onMounted(async () => {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: rgba(139, 92, 246, 0.32);
-}
-.plaza-section__icon--general {
-  background: rgba(34, 211, 238, 0.12);
-  color: #67e8f9;
-  border-color: rgba(34, 211, 238, 0.3);
 }
 .plaza-section__title h4 {
   font-family: var(--font-display);
@@ -738,12 +687,6 @@ onMounted(async () => {
   color: var(--accent);
   border: 1px solid rgba(139, 92, 246, 0.3);
 }
-.plaza-section--general .plaza-section__pill {
-  background: rgba(34, 211, 238, 0.12);
-  color: #67e8f9;
-  border: 1px solid rgba(34, 211, 238, 0.3);
-}
-
 /* 超级员工网格：稍宽以突出旗舰感 */
 .plaza-grid--super {
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));

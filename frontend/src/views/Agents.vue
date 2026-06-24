@@ -66,13 +66,27 @@
         v-for="g in groupedList"
         :key="g.key"
         class="agents-group"
+        :class="{ 'is-collapsed': isCollapsed(g.key) }"
       >
-        <header class="agents-group__head">
+        <header class="agents-group__head" @click="toggleGroup(g.key)">
           <span class="agents-group__icon" v-html="g.icon" />
           <h4>{{ g.name }}</h4>
           <span class="agents-group__count">{{ g.items.length }}</span>
+          <span class="agents-group__chips" v-if="g.subAgents?.length">
+            <span v-for="(sub, i) in g.subAgents" :key="i" class="agents-group__chip">{{ sub }}</span>
+          </span>
+          <button
+            class="agents-group__toggle"
+            :title="isCollapsed(g.key) ? '展开' : '收起'"
+            @click.stop="toggleGroup(g.key)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path v-if="isCollapsed(g.key)" d="M6 9l6 6 6-6"/>
+              <path v-else d="M18 15l-6-6-6 6"/>
+            </svg>
+          </button>
         </header>
-        <div class="agents-grid">
+        <div v-show="!isCollapsed(g.key)" class="agents-grid">
           <article
             v-for="a in g.items"
             :key="a.id"
@@ -267,29 +281,37 @@ const ICON_MAP = {
 }
 function iconName(name) { return markRaw(ICON_MAP[name] || MagicStick) }
 
-/* ============== 分类元数据 (与 Skills 分类命名一致) ============== */
+/* ============== 分类元数据 (5 大分类体系) ============== */
 const CATEGORY_META = {
   terminal: {
     name: '用户终端智能化测试',
+    subAgents: ['便携/固定终端功能兼容性测试', '手机直连卫星终端测试', '终端大规模接入模拟'],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
   },
   network: {
     name: '星地网络智能化测试',
+    subAgents: ['星地链路损伤仿真', '星座组网仿真测试', '网络性能/压力测试'],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
   },
   payload: {
-    name: '载荷智能化测试',
+    name: '卫星载荷智能化测试',
+    subAgents: ['AI 载荷性能/功能测试', '射频/基带自动化测试', '极端环境可靠测试'],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
   },
   e2e: {
-    name: '全链路智能化测试',
+    name: '全链路智能化验收与运维测试',
+    subAgents: ['在轨运维与故障预测', '安全与攻击测试', '端到端业务验收测试'],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.5 7.5 15.5 16.5M15.5 7.5 8.5 16.5"/></svg>',
   },
   custom: {
     name: '我的自定义智能体',
+    subAgents: [],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
   },
 }
+
+/* 固定分类顺序:1-5 */
+const CATEGORY_ORDER = ['terminal', 'network', 'payload', 'e2e', 'custom']
 
 /* ============== 分类调色板 (对齐 skill-card__icon 配色) ============== */
 const CATEGORY_PALETTE = {
@@ -373,38 +395,44 @@ const currentList = computed(() => {
   return applyKeyword(res)
 })
 
-/* 按 category 分组 (custom 全部并入 "我的自定义智能体" 一组) */
+/* 按 category 分组,固定 1-5 顺序,custom 分类仅在存在时显示 */
 const groupedList = computed(() => {
   const groups = []
-  if (typeTab.value === 'all' || typeTab.value === 'custom') {
-    const customs = currentList.value.filter((a) => a.type === 'custom')
-    if (customs.length) {
-      groups.push({
-        key: 'custom',
-        name: CATEGORY_META.custom.name,
-        icon: CATEGORY_META.custom.icon,
-        items: customs,
+  const seen = new Map()
+  currentList.value.forEach((a) => {
+    const k = (a.type === 'custom') ? 'custom' : (a.category || 'custom')
+    if (!seen.has(k)) {
+      const meta = CATEGORY_META[k] || { name: k, icon: '', subAgents: [] }
+      seen.set(k, {
+        key: k,
+        name: meta.name,
+        icon: meta.icon,
+        subAgents: meta.subAgents || [],
+        items: [],
       })
     }
+    seen.get(k).items.push(a)
+  })
+  /* custom 分类仅在存在自定义智能体时展示 */
+  if (!seen.has('custom')) {
+    /* do not push custom if no items */
   }
-  if (typeTab.value === 'all' || typeTab.value === 'builtin') {
-    const builtins = currentList.value.filter((a) => a.type === 'builtin')
-    const seen = new Map()
-    builtins.forEach((a) => {
-      const k = a.category || 'custom'
-      if (!seen.has(k)) {
-        const meta = CATEGORY_META[k] || { name: k, icon: '' }
-        seen.set(k, { key: k, name: meta.name, icon: meta.icon, items: [] })
-      }
-      seen.get(k).items.push(a)
-    })
-    /* 保持 CATEGORY_META 顺序 */
-    Object.keys(CATEGORY_META).forEach((k) => {
-      if (seen.has(k)) groups.push(seen.get(k))
-    })
-  }
+  /* 按 CATEGORY_ORDER 固定顺序输出 */
+  CATEGORY_ORDER.forEach((k) => {
+    if (seen.has(k)) groups.push(seen.get(k))
+  })
   return groups
 })
+
+/* 折叠/展开状态 */
+const collapsed = ref(new Set())
+function isCollapsed(key) { return collapsed.value.has(key) }
+function toggleGroup(key) {
+  if (collapsed.value.has(key)) collapsed.value.delete(key)
+  else collapsed.value.add(key)
+  /* 触发响应式更新(Set 替换) */
+  collapsed.value = new Set(collapsed.value)
+}
 
 /* ============== 辅助方法 ============== */
 function categoryName(key) {
@@ -570,17 +598,25 @@ onUnmounted(() => { entering.value = false })
 .agents-group { margin-bottom: 28px; }
 .agents-group__head {
   display: flex; align-items: center; gap: 8px;
-  padding: 0 4px;
+  padding: 8px 6px;
   margin-bottom: 12px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 10px;
+  transition: background 0.15s;
 }
+.agents-group__head:hover { background: var(--surface-2); }
+.agents-group.is-collapsed .agents-group__head { margin-bottom: 0; }
 .agents-group__icon {
   display: inline-flex; align-items: center; justify-content: center;
   width: 22px; height: 22px;
   color: var(--accent);
+  flex-shrink: 0;
 }
 .agents-group__icon :deep(svg) { width: 20px; height: 20px; }
 .agents-group__head h4 {
   margin: 0; font-size: 15px; font-weight: 600; color: var(--ink);
+  flex-shrink: 0;
 }
 .agents-group__count {
   display: inline-flex; align-items: center; justify-content: center;
@@ -588,7 +624,34 @@ onUnmounted(() => { entering.value = false })
   border-radius: 6px;
   background: var(--surface-2); color: var(--ink-3);
   font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
 }
+.agents-group__chips {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-left: 4px;
+  flex: 1; min-width: 0;
+}
+.agents-group__chip {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 11px; font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.agents-group__toggle {
+  width: 28px; height: 28px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink-3);
+  cursor: pointer; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.agents-group__toggle:hover { background: var(--surface-2); color: var(--ink); }
+.agents-group__toggle svg { width: 16px; height: 16px; transition: transform 0.2s; }
 
 .agents-grid {
   display: grid; gap: 14px;
@@ -799,6 +862,7 @@ onUnmounted(() => { entering.value = false })
   .agents-hero { flex-direction: column; align-items: flex-start; }
   .agents-hero__stats { width: 100%; justify-content: stretch; }
   .stat-card { flex: 1; }
+  .agents-group__chips { display: none; }
 }
 @media (max-width: 720px) {
   .page { padding: 16px 16px 32px; }

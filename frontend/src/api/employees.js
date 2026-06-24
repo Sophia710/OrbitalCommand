@@ -17,7 +17,7 @@ registerRoute('GET /employees/list', {
   handler: ({ params } = {}) => {
     let list = [...MOCK.employees]
     if (params?.kind) {
-      // 兼容 kind 过滤：'super' / 'professional' / 'general'
+      // 兼容 kind 过滤：'super' / 'professional'
       list = list.filter((e) => e.kind === params.kind)
     }
     if (params?.domain) list = list.filter((e) => e.domain === params.domain)

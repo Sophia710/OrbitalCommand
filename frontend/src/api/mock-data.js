@@ -11,10 +11,23 @@ const DAY = 24 * HOUR
 
 /* ============ 导航 ============ */
 // 与 prototype copy 的 static index.html 一致：
-//   主导航 = 指挥中心 / 智能中心(展开含 智能体/技能/知识库) / 数字员工(展开含 员工广场/我的员工/创建员工) / 数据应用 / 文件中心 / 任务监控
+//   主导航 = 指挥中心 / 数字员工(展开含 员工广场/我的员工/创建员工) / 智能中心(展开含 智能体/技能/知识库) / 任务监控
 //   管理导航 = 审核中心 / 审计日志 / 系统设置
 const NAV = [
   { id: 'dashboard',     label: '指挥中心',   icon: 'Odometer',       desc: '总览与监控',          count: null, group: 'main' },
+  {
+    id: 'employees',
+    label: '数字员工',
+    icon: 'Group',
+    desc: '员工广场 / 我的员工 / 创建员工',
+    count: null,
+    group: 'main',
+    children: [
+      { id: 'plaza',        label: '员工广场', icon: 'UserFilled', desc: '发现与订阅数字员工', count: 48 },
+      { id: 'my-employees', label: '我的员工', icon: 'Star',       desc: '管理我创建/订阅的',  count: 12 },
+      { id: 'create',       label: '创建员工', icon: 'MagicStick', desc: '零代码自定义',       count: null },
+    ],
+  },
   {
     id: 'smart-center',
     label: '智能中心',
@@ -23,7 +36,7 @@ const NAV = [
     count: null,
     group: 'main',
     children: [
-      { id: 'agents',        label: '智能体',     icon: 'Cpu',         desc: '发现与订阅智能体',    count: 36 },
+      { id: 'agents',        label: '智能体',     icon: 'Cpu',         desc: '发现与订阅智能体',    count: 12 },
       { id: 'skills',        label: '技能',       icon: 'MagicStick',  desc: '管理可复用技能',      count: 24 },
       {
         id: 'knowledge',
@@ -39,21 +52,6 @@ const NAV = [
       },
     ],
   },
-  {
-    id: 'employees',
-    label: '数字员工',
-    icon: 'Group',
-    desc: '员工广场 / 我的员工 / 创建员工',
-    count: null,
-    group: 'main',
-    children: [
-      { id: 'plaza',        label: '员工广场', icon: 'UserFilled', desc: '发现与订阅数字员工', count: 48 },
-      { id: 'my-employees', label: '我的员工', icon: 'Star',       desc: '管理我创建/订阅的',  count: 12 },
-      { id: 'create',       label: '创建员工', icon: 'MagicStick', desc: '零代码自定义',       count: null },
-    ],
-  },
-  { id: 'data',          label: '数据应用',   icon: 'DataAnalysis',   desc: '看板与自助分析',      count: null, group: 'main' },
-  { id: 'files',         label: '文件中心',   icon: 'Folder',         desc: '上传与管理文档',      count: null, group: 'main' },
   { id: 'tasks',         label: '任务监控',   icon: 'Connection',     desc: '全链路任务追踪',      count: 5,    live: true, group: 'main' },
   { id: 'review',        label: '审核中心',   icon: 'Stamp',          desc: '员工上架审核',        count: 3,    group: 'aux' },
   { id: 'audit',         label: '审计日志',   icon: 'Document',       desc: '操作与合规审计',      count: null, group: 'aux' },
@@ -89,8 +87,8 @@ const ALARMS = [
 const TASKS = [
   { id: 'T-2026-0617-01', title: '信关站链路异常诊断',   agent: '链路诊断员 · 卫通7号',  progress: 78,  status: 'run',  time: '00:42' },
   { id: 'T-2026-0617-02', title: 'Ka 频段用户终端干扰分析', agent: '干扰分析员 · 卫通12号', progress: 100, status: 'done', time: '02:14' },
-  { id: 'T-2026-0617-03', title: '载荷健康度周报生成',   agent: '报告生成员',             progress: 100, status: 'done', time: '01:36' },
-  { id: 'T-2026-0617-04', title: 'TTC 测控计划自动编排', agent: '任务编排助理',           progress: 45,  status: 'run',  time: '01:08' },
+  { id: 'T-2026-0617-03', title: '载荷健康度周报生成',   agent: '全链路编排员 · 中央',   progress: 100, status: 'done', time: '01:36' },
+  { id: 'T-2026-0617-04', title: 'TTC 测控计划自动编排', agent: '全链路编排员 · 中央',   progress: 45,  status: 'run',  time: '01:08' },
   { id: 'T-2026-0617-05', title: '测控站天线校准参数核查', agent: '测控分析员',           progress: 12,  status: 'run',  time: '00:24' },
   { id: 'T-2026-0617-06', title: '星上软件在轨升级策略评估', agent: '载荷分析员',         progress: 0,   status: 'wait', time: '等待资源' },
   { id: 'T-2026-0617-07', title: '用户终端 OTA 灰度发布', agent: '终端管理助理',           progress: 100, status: 'fail', time: '回滚' },
@@ -125,11 +123,10 @@ const COVERAGE_DAYS = ['周一', '周二', '周三', '周四', '周五', '周六
 const SKILLS = ['链路诊断', '干扰分析', 'OTA 升级', '遥测解析', '故障定位', '报告生成', '参数调优', '数据回放', '频谱分析', '网管告警', '测控编排', '终端验证', '标准比对']
 
 /* ============================================================
- * 员工三级分类 · 员工卡数据模型
+ * 员工二级分类 · 员工卡数据模型
  * ------------------------------------------------------------
  *  kind: 'super'         超级员工（S 级 · 旗舰综合能力体）
  *  kind: 'professional'  专业员工（A 级 · 场景专家）
- *  kind: 'general'       通用智能体（B 级 · 通用能力）
  *  tier:    序号，仅作展示排序用
  *  series:  超级员工专属字段，标识其 4 大固定类别之一
  * ============================================================ */
@@ -142,26 +139,18 @@ const SUPER_SERIES = [
 
 const EMPLOYEES = [
   /* ============ 超级员工 · S 级（4 个固定类别）============ */
-  { id: 'emp_s01', kind: 'super', tier: 1, series: 'terminal',  domain: '终端',     name: '天枢 · 用户终端智能测试官', avatar: '#6366f1', accent: '#a5b4fc', tags: ['终端验证', 'OTA 升级', '标准比对', '回归基线'], description: '面向 CPE、模组、终端芯片的全生命周期智能化测试，统一功能 / 性能 / 一致性 / OTA 四大维度的脚本生成、缺陷回放与回归闭环。', skills: ['终端验证', 'OTA 升级', '标准比对'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 28134, rating: 5.0, reviews: 482, createdAt: NOW - 120*DAY },
-  { id: 'emp_s02', kind: 'super', tier: 2, series: 'satnet',    domain: '星地链路', name: '天璇 · 星地网络智能测试官', avatar: '#0ea5e9', accent: '#7dd3fc', tags: ['链路诊断', '故障定位', '数据回放', '干扰分析'], description: '覆盖协议一致性、性能基准、故障注入与回放、干扰源定位，端到端输出星地网络健康度评分与处置建议。',         skills: ['链路诊断', '故障定位', '数据回放'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 24819, rating: 4.9, reviews: 411, createdAt: NOW - 110*DAY },
-  { id: 'emp_s03', kind: 'super', tier: 3, series: 'payload',   domain: '载荷',     name: '天玑 · 卫星载荷智能测试官', avatar: '#14b8a6', accent: '#5eead4', tags: ['遥测解析', '参数调优', '频谱分析', 'EIRP 标定'], description: 'EIRP / G/T 标定、波束跳变、接口验证、异常诊断一体化执行，载荷级高风险操作具备自动审批与回滚能力。',           skills: ['遥测解析', '参数调优', '频谱分析'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 19283, rating: 4.9, reviews: 326, createdAt: NOW - 100*DAY },
-  { id: 'emp_s04', kind: 'super', tier: 4, series: 'fullchain', domain: '全链路',   name: '天权 · 全链路智能验收官',   avatar: '#8b5cf6', accent: '#c4b5fd', tags: ['跨域编排', '验收剧本', '根因分析', '运维自动化'], description: '编排跨域测试 / 跨域数据关联 / 根因分析 / 运维剧本自动执行，端到端验收与 7×24 智能运维一体化。',                   skills: ['测控编排', '故障定位', '报告生成'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 32410, rating: 5.0, reviews: 587, createdAt: NOW - 130*DAY },
+  { id: 'emp_s01', kind: 'super', tier: 1, series: 'terminal',  domain: '终端',     name: '用户终端智能测试官', avatar: '#6366f1', accent: '#a5b4fc', tags: ['终端验证', 'OTA 升级', '标准比对', '回归基线'], description: '面向 CPE、模组、终端芯片的全生命周期智能化测试，统一功能 / 性能 / 一致性 / OTA 四大维度的脚本生成、缺陷回放与回归闭环。', skills: ['终端验证', 'OTA 升级', '标准比对'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 28134, rating: 5.0, reviews: 482, createdAt: NOW - 120*DAY },
+  { id: 'emp_s02', kind: 'super', tier: 2, series: 'satnet',    domain: '星地链路', name: '星地网络智能测试官', avatar: '#0ea5e9', accent: '#7dd3fc', tags: ['链路诊断', '故障定位', '数据回放', '干扰分析'], description: '覆盖协议一致性、性能基准、故障注入与回放、干扰源定位，端到端输出星地网络健康度评分与处置建议。',         skills: ['链路诊断', '故障定位', '数据回放'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 24819, rating: 4.9, reviews: 411, createdAt: NOW - 110*DAY },
+  { id: 'emp_s03', kind: 'super', tier: 3, series: 'payload',   domain: '载荷',     name: '卫星载荷智能测试官', avatar: '#14b8a6', accent: '#5eead4', tags: ['遥测解析', '参数调优', '频谱分析', 'EIRP 标定'], description: 'EIRP / G/T 标定、波束跳变、接口验证、异常诊断一体化执行，载荷级高风险操作具备自动审批与回滚能力。',           skills: ['遥测解析', '参数调优', '频谱分析'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 19283, rating: 4.9, reviews: 326, createdAt: NOW - 100*DAY },
+  { id: 'emp_s04', kind: 'super', tier: 4, series: 'fullchain', domain: '全链路',   name: '全链路智能验收官',   avatar: '#8b5cf6', accent: '#c4b5fd', tags: ['跨域编排', '验收剧本', '根因分析', '运维自动化'], description: '编排跨域测试 / 跨域数据关联 / 根因分析 / 运维剧本自动执行，端到端验收与 7×24 智能运维一体化。',                   skills: ['测控编排', '故障定位', '报告生成'], publisher: 'AEROS · 旗舰', status: 'published', version: '5.0.0', usage: 32410, rating: 5.0, reviews: 587, createdAt: NOW - 130*DAY },
 
   /* ============ 专业员工 · A 级（场景专家）============ */
-  { id: 'emp_001', kind: 'professional', domain: '终端',     name: '终端验证员 · 天线一号', avatar: '#8b5cf6', accent: '#d946ef', tags: ['OTA 升级', '终端验证', '标准比对'], description: '面向 CPE、模组、终端芯片的智能化测试，覆盖功能/性能/一致性/OTA 全流程。', skills: ['链路诊断', 'OTA 升级', '终端验证'], publisher: 'AEROS · 平台', status: 'published', version: '2.4.1', usage: 12480, rating: 4.9, reviews: 218, createdAt: NOW - 30*DAY },
-  { id: 'emp_002', kind: 'professional', domain: '星地链路', name: '链路诊断员 · 卫通7号',  avatar: '#06b6d4', accent: '#22d3ee', tags: ['链路诊断', '故障定位', '数据回放'], description: '执行协议一致性、性能基准、故障注入与回放，输出网络健康度评分。',       skills: ['链路诊断', '故障定位', '数据回放'], publisher: 'AEROS · 平台', status: 'published', version: '3.0.2', usage: 8972,  rating: 4.8, reviews: 174, createdAt: NOW - 25*DAY },
-  { id: 'emp_003', kind: 'professional', domain: '载荷',     name: '载荷分析员 · 卫通12号', avatar: '#10b981', accent: '#a3e635', tags: ['遥测解析', '参数调优', '频谱分析'], description: 'EIRP / G/T、波束跳变、接口验证、异常诊断；高风险操作需人工审批。',           skills: ['遥测解析', '参数调优'], publisher: 'AEROS · 平台', status: 'published', version: '1.8.0', usage: 5621,  rating: 4.7, reviews: 96,  createdAt: NOW - 20*DAY },
-  { id: 'emp_004', kind: 'professional', domain: '全链路',   name: '全链路编排员 · 中央',     avatar: '#f59e0b', accent: '#fde047', tags: ['测控编排', '故障定位', '报告生成'], description: '编排跨域测试、跨域数据关联、根因分析、运维剧本自动执行。',                       skills: ['测控编排', '故障定位'], publisher: 'AEROS · 平台', status: 'published', version: '4.2.0', usage: 15320, rating: 5.0, reviews: 312, createdAt: NOW - 60*DAY },
-  { id: 'emp_009', kind: 'professional', domain: '星地链路', name: '干扰分析员 · 卫通12号',   avatar: '#d946ef', accent: '#f0abfc', tags: ['干扰分析', '频谱分析'],         description: '频谱监测、干扰源定位、信号质量评估，输出干扰处理建议。',                         skills: ['频谱分析', '干扰分析'], publisher: '运控中心',     status: 'rejected', version: '0.3.0', usage: 0,     rating: 0,   reviews: 0,   createdAt: NOW - 1*DAY },
+  { id: 'emp_001', kind: 'professional', domain: '终端',     name: '终端验证员', avatar: '#8b5cf6', accent: '#d946ef', tags: ['OTA 升级', '终端验证', '标准比对'], description: '面向 CPE、模组、终端芯片的智能化测试，覆盖功能/性能/一致性/OTA 全流程。', skills: ['链路诊断', 'OTA 升级', '终端验证'], publisher: 'AEROS', status: 'published', version: '2.4.1', usage: 12480, rating: 4.9, reviews: 218, createdAt: NOW - 30*DAY },
+  { id: 'emp_002', kind: 'professional', domain: '星地链路', name: '链路诊断员',  avatar: '#06b6d4', accent: '#22d3ee', tags: ['链路诊断', '故障定位', '数据回放'], description: '执行协议一致性、性能基准、故障注入与回放，输出网络健康度评分。',       skills: ['链路诊断', '故障定位', '数据回放'], publisher: 'AEROS', status: 'published', version: '3.0.2', usage: 8972,  rating: 4.8, reviews: 174, createdAt: NOW - 25*DAY },
+  { id: 'emp_003', kind: 'professional', domain: '载荷',     name: '载荷分析员', avatar: '#10b981', accent: '#a3e635', tags: ['遥测解析', '参数调优', '频谱分析'], description: 'EIRP / G/T、波束跳变、接口验证、异常诊断；高风险操作需人工审批。',           skills: ['遥测解析', '参数调优'], publisher: 'AEROS', status: 'published', version: '1.8.0', usage: 5621,  rating: 4.7, reviews: 96,  createdAt: NOW - 20*DAY },
+  { id: 'emp_004', kind: 'professional', domain: '全链路',   name: '全链路编排员',     avatar: '#f59e0b', accent: '#fde047', tags: ['测控编排', '故障定位', '报告生成'], description: '编排跨域测试、跨域数据关联、根因分析、运维剧本自动执行。',                       skills: ['测控编排', '故障定位'], publisher: 'AEROS', status: 'published', version: '4.2.0', usage: 15320, rating: 5.0, reviews: 312, createdAt: NOW - 60*DAY },
+  { id: 'emp_009', kind: 'professional', domain: '星地链路', name: '干扰分析员',   avatar: '#d946ef', accent: '#f0abfc', tags: ['干扰分析', '频谱分析'],         description: '频谱监测、干扰源定位、信号质量评估，输出干扰处理建议。',                         skills: ['频谱分析', '干扰分析'], publisher: '运控中心',     status: 'rejected', version: '0.3.0', usage: 0,     rating: 0,   reviews: 0,   createdAt: NOW - 1*DAY },
   { id: 'emp_011', kind: 'professional', domain: '终端',     name: '终端管理助理',             avatar: '#fbbf24', accent: '#fde047', tags: ['OTA 升级', '终端验证'],         description: '终端批量管理、灰度发布、配置下发、健康监控。',                                   skills: ['OTA 升级', '终端验证'], publisher: '运控中心', status: 'published', version: '2.0.0', usage: 6210, rating: 4.8, reviews: 92, createdAt: NOW - 12*DAY },
-
-  /* ============ 通用智能体 · B 级（通用能力）============ */
-  { id: 'emp_005', kind: 'general',      domain: '通用',     name: '报告生成员',               avatar: '#f43f5e', accent: '#fb7185', tags: ['报告生成', '模板渲染'],                description: '多类型文档生成、模板化输出、数据可视化、多源信息整合。',                         skills: ['报告生成'], publisher: 'AEROS · 平台', status: 'published', version: '1.5.3', usage: 7133,  rating: 4.6, reviews: 88,  createdAt: NOW - 15*DAY },
-  { id: 'emp_006', kind: 'general',      domain: '通用',     name: '数据洞察员',               avatar: '#3b82f6', accent: '#60a5fa', tags: ['NL2SQL', '指标计算', '归因分析'], description: 'NL 查询、指标计算、趋势 / 异常 / 归因、看板、预测分析。',                         skills: ['NL2SQL'], publisher: 'AEROS · 平台', status: 'published', version: '3.2.0', usage: 12209, rating: 4.9, reviews: 201, createdAt: NOW - 10*DAY },
-  { id: 'emp_007', kind: 'general',      domain: '通用',     name: '任务编排助理',             avatar: '#a78bfa', accent: '#c4b5fd', tags: ['多步骤', '定时', '触发器'],      description: '多步骤任务规划、跨员工调度、定时与触发器、异常处理。',                           skills: ['测控编排'], publisher: 'AEROS · 平台', status: 'published', version: '2.1.0', usage: 9842,  rating: 4.8, reviews: 144, createdAt: NOW - 8*DAY },
-  { id: 'emp_008', kind: 'general',      domain: '通用',     name: '日志洞察助理',             avatar: '#14b8a6', accent: '#5eead4', tags: ['日志', '检索', '聚合'],          description: '海量遥测/操作日志的智能检索、聚合与异常洞察。',                                 skills: ['故障定位'], publisher: 'AEROS · 平台', status: 'pending',  version: '0.6.0', usage: 1024,  rating: 0,   reviews: 0,   createdAt: NOW - 3*DAY },
-  { id: 'emp_010', kind: 'general',      domain: '通用',     name: '翻译助理',                 avatar: '#22d3ee', accent: '#67e8f9', tags: ['翻译', '多语种', '术语库'],     description: '中英俄西法多语种互译，航天术语库支持。',                                          skills: ['报告生成'], publisher: 'AEROS · 平台', status: 'published', version: '1.0.0', usage: 4521,  rating: 4.7, reviews: 67,  createdAt: NOW - 5*DAY },
-  { id: 'emp_012', kind: 'general',      domain: '通用',     name: '会议纪要员',               avatar: '#fb7185', accent: '#fda4af', tags: ['NLP', '摘要', '行动项'],        description: '实时转写、自动摘要、行动项提取、责任人对齐。',                                   skills: ['报告生成'], publisher: 'AEROS · 平台', status: 'pending', version: '0.4.0', usage: 320, rating: 0, reviews: 0, createdAt: NOW - 2*DAY },
 ]
 
 const MY_EMPLOYEES = EMPLOYEES.slice(0, 5).map((e) => ({ ...e, hiredAt: NOW - 2 * DAY, source: 'subscribed' }))
@@ -193,46 +182,22 @@ const AGENT_CATEGORY_LABELS = {
 }
 const AGENT_CATEGORY_KEYS = ['terminal', 'network', 'payload', 'e2e']
 const AGENT_TEMPLATES = [
-  // 终端类
-  { category: 'terminal', icon: 'smartphone',     color_theme: '#4CAF50', tags: ['终端验证', '协议一致性', '信号质量'] },
-  { category: 'terminal', icon: 'router',         color_theme: '#8BC34A', tags: ['终端验证', '接口兼容', '协议一致性'] },
-  { category: 'terminal', icon: 'groups',         color_theme: '#CDDC39', tags: ['大规模接入', '信令分析', '拥塞控制'] },
-  { category: 'terminal', icon: 'sim_card',       color_theme: '#7CB342', tags: ['SIM 配置', 'OTA 升级', '参数调优'] },
-  { category: 'terminal', icon: 'cell_tower',     color_theme: '#66BB6A', tags: ['小区切换', '邻区测量', '接入时延'] },
-  { category: 'terminal', icon: 'sensors',        color_theme: '#AED581', tags: ['传感器', 'IoT', '低功耗'] },
-  { category: 'terminal', icon: 'developer_mode', color_theme: '#9CCC65', tags: ['固件验证', '驱动兼容', '功能回归'] },
-  { category: 'terminal', icon: 'phone_iphone',   color_theme: '#43A047', tags: ['手机直连', '波束跟踪', '功耗分析'] },
-  { category: 'terminal', icon: 'battery_charging_full', color_theme: '#558B2F', tags: ['续航测试', '功耗基线', '休眠策略'] },
-  // 网络类
-  { category: 'network',  icon: 'speed',          color_theme: '#2196F3', tags: ['网络性能', '吞吐', '时延'] },
-  { category: 'network',  icon: 'cloud_sync',     color_theme: '#03A9F4', tags: ['链路损伤', '雨衰', '多普勒'] },
-  { category: 'network',  icon: 'hub',            color_theme: '#00BCD4', tags: ['星座组网', '拓扑', '路由切换'] },
-  { category: 'network',  icon: 'router',         color_theme: '#0288D1', tags: ['网络诊断', 'QoS', '策略路由'] },
-  { category: 'network',  icon: 'sync_alt',       color_theme: '#039BE5', tags: ['时频同步', '时间同步', '网同步'] },
-  { category: 'network',  icon: 'graphic_eq',     color_theme: '#0277BD', tags: ['频谱监测', '干扰分析', '信号识别'] },
-  { category: 'network',  icon: 'cable',          color_theme: '#01579B', tags: ['光传输', '信关站', '承载网'] },
-  { category: 'network',  icon: 'settings_ethernet', color_theme: '#29B6F6', tags: ['以太网', 'IPSec', 'VLAN'] },
-  { category: 'network',  icon: 'tune',           color_theme: '#4FC3F7', tags: ['参数调优', '链路预算', '容量规划'] },
-  // 载荷类
-  { category: 'payload',  icon: 'psychology',     color_theme: '#9C27B0', tags: ['AI 推理', '模型更新', '在轨算法'] },
-  { category: 'payload',  icon: 'settings_input_antenna', color_theme: '#673AB7', tags: ['射频', '基带', '调制解调'] },
-  { category: 'payload',  icon: 'thermostat',     color_theme: '#3F51B5', tags: ['极端环境', '辐射', '热真空'] },
-  { category: 'payload',  icon: 'memory',         color_theme: '#5E35B1', tags: ['星载存储', '数据回放', '压缩'] },
-  { category: 'payload',  icon: 'precision_manufacturing', color_theme: '#7E57C2', tags: ['姿轨控', '执行机构', '推力器'] },
-  { category: 'payload',  icon: 'solar_power',    color_theme: '#9575CD', tags: ['能源系统', '太阳能', '蓄电池'] },
-  { category: 'payload',  icon: 'radar',          color_theme: '#B39DDB', tags: ['SAR', '测控', '雷达载荷'] },
-  { category: 'payload',  icon: 'auto_awesome',   color_theme: '#8E24AA', tags: ['智能调度', '任务编排', '资源管理'] },
-  { category: 'payload',  icon: 'scatter_plot',   color_theme: '#AB47BC', tags: ['遥测解析', '异常检测', '趋势分析'] },
-  // 全链路类
-  { category: 'e2e',      icon: 'health_and_safety', color_theme: '#FF5722', tags: ['在轨运维', '健康度', '故障预测'] },
-  { category: 'e2e',      icon: 'shield',         color_theme: '#E91E63', tags: ['安全攻防', '红蓝对抗', '漏洞修复'] },
-  { category: 'e2e',      icon: 'task_alt',       color_theme: '#FF9800', tags: ['端到端验收', '业务贯通', '回归基线'] },
-  { category: 'e2e',      icon: 'monitor_heart',  color_theme: '#F44336', tags: ['SLA 监控', '告警收敛', '根因定位'] },
-  { category: 'e2e',      icon: 'analytics',      color_theme: '#FF7043', tags: ['性能分析', '基线建模', '异常洞察'] },
-  { category: 'e2e',      icon: 'rocket_launch',  color_theme: '#EC407A', tags: ['发射支持', '早期在轨', '状态评估'] },
-  { category: 'e2e',      icon: 'cyclone',        color_theme: '#D81B60', tags: ['应急响应', '故障恢复', '业务切换'] },
-  { category: 'e2e',      icon: 'workspace_premium', color_theme: '#FF8A65', tags: ['质量评估', '达标率', '改进建议'] },
-  { category: 'e2e',      icon: 'fact_check',     color_theme: '#FFAB91', tags: ['合规检查', '审计支持', '报告生成'] },
+  /* ============ 分类1 · 用户终端智能化测试 ============ */
+  { category: 'terminal', icon: 'developer_mode', color_theme: '#10b981', tags: ['终端验证', '协议一致性', '接口兼容'] },
+  { category: 'terminal', icon: 'phone_iphone',   color_theme: '#22c55e', tags: ['手机直连', '波束跟踪', '功耗分析'] },
+  { category: 'terminal', icon: 'groups',         color_theme: '#84cc16', tags: ['大规模接入', '信令分析', '拥塞控制'] },
+  /* ============ 分类2 · 星地网络智能化测试 ============ */
+  { category: 'network',  icon: 'cloud_sync',     color_theme: '#3b82f6', tags: ['链路损伤', '雨衰', '多普勒'] },
+  { category: 'network',  icon: 'hub',            color_theme: '#0ea5e9', tags: ['星座组网', '拓扑', '路由切换'] },
+  { category: 'network',  icon: 'speed',          color_theme: '#06b6d4', tags: ['网络性能', '吞吐', '时延'] },
+  /* ============ 分类3 · 卫星载荷智能化测试 ============ */
+  { category: 'payload',  icon: 'psychology',     color_theme: '#a855f7', tags: ['AI 推理', '模型更新', '在轨算法'] },
+  { category: 'payload',  icon: 'settings_input_antenna', color_theme: '#8b5cf6', tags: ['射频', '基带', '调制解调'] },
+  { category: 'payload',  icon: 'thermostat',     color_theme: '#ec4899', tags: ['极端环境', '辐射', '热真空'] },
+  /* ============ 分类4 · 全链路智能化验收与运维测试 ============ */
+  { category: 'e2e',      icon: 'health_and_safety', color_theme: '#f43f5e', tags: ['在轨运维', '健康度', '故障预测'] },
+  { category: 'e2e',      icon: 'shield',         color_theme: '#ef4444', tags: ['安全攻防', '红蓝对抗', '漏洞修复'] },
+  { category: 'e2e',      icon: 'task_alt',       color_theme: '#f97316', tags: ['端到端验收', '业务贯通', '回归基线'] },
 ]
 const AGENT_NAME_POOL = {
   terminal: ['终端', 'CPE', '模组', 'SIM', '基站', 'IoT', 'OTA'],
@@ -243,59 +208,43 @@ const AGENT_NAME_POOL = {
 const STATUS_DIST = ['active', 'active', 'active', 'active', 'active', 'active', 'active', 'maintenance', 'draft']
 
 function _buildAgents() {
-  // 在 12 个种子基础上扩展到 36,字段与后端 schema 严格一致
+  // 5 大分类体系,每个分类固定 3 个用户指定智能体 = 12 个系统内置智能体
   const base = [
-    { id: 'agent-001', name: '手机直连卫星终端测试',        description: '针对手机直连卫星场景的终端功能、信号质量、功耗等全方位智能化测试，支持多频段、多制式终端自动适配验证。' },
-    { id: 'agent-002', name: '便携/固定终端功能兼容性测试',  description: '覆盖便携式用户终端与固定地面站的协议兼容性、接口一致性及业务功能自动化测试。' },
-    { id: 'agent-003', name: '终端大规模接入模拟',           description: '模拟海量终端同时接入场景下的信令风暴、资源调度和拥塞控制等压力测试。' },
-    { id: 'agent-004', name: '网络性能/压力测试',            description: '对星地融合网络的吞吐量、时延、抖动等关键指标进行智能化性能基准测试与极限压测。' },
-    { id: 'agent-005', name: '星地链路损伤仿真',            description: '模拟雨衰、大气闪烁、多普勒频移等链路损伤条件下的传输可靠性智能评估。' },
-    { id: 'agent-006', name: '星座组网仿真测试',             description: '基于数字孪生技术对低轨星座拓扑动态变化、路由切换及星间链路进行全链路仿真验证。' },
-    { id: 'agent-007', name: 'AI载荷性能/功能测试',          description: '面向星载AI处理器的推理性能、能效比及在轨模型更新功能的自动化测试框架。' },
-    { id: 'agent-008', name: '射频/基带自动化测试',          description: '覆盖卫星转发器射频特性、基带调制解调参数的全自动化测试与异常检测。' },
-    { id: 'agent-009', name: '极端环境可靠测试',             description: '模拟空间辐射、热真空循环等极端环境下卫星载荷的功能可靠性与寿命预测测试。' },
-    { id: 'agent-010', name: '在轨运维与故障预测',           description: '利用遥测大数据进行健康状态评估、异常根因分析及故障预测性维护的智能运维系统。' },
-    { id: 'agent-011', name: '安全与攻击测试',               description: '针对星地链路的窃听、干扰、欺骗等攻击场景进行红蓝对抗演练与安全加固验证。' },
-    { id: 'agent-012', name: '端到端业务验收测试',           description: '从用户终端到应用服务器的完整业务链路验收测试，覆盖语音、视频、物联网等多类业务场景。' },
+    /* ============ 分类1 · 用户终端智能化测试 ============ */
+    { id: 'agent-001', category: 'terminal', name: '便携/固定终端功能兼容性测试', description: '覆盖便携式用户终端与固定地面站的协议兼容性、接口一致性及业务功能自动化测试,支持多频段 / 多制式 / 多厂商终端的批量回归验证。' },
+    { id: 'agent-002', category: 'terminal', name: '手机直连卫星终端测试',         description: '针对手机直连卫星场景的终端功能、信号质量、波束跟踪、功耗等全方位智能化测试,支持 3GPP NTN 等制式的自动适配验证。' },
+    { id: 'agent-003', category: 'terminal', name: '终端大规模接入模拟',           description: '模拟海量终端同时接入场景下的信令风暴、资源调度、拥塞控制与切换可靠性压力测试,支持百万级虚拟用户并发。' },
+    /* ============ 分类2 · 星地网络智能化测试 ============ */
+    { id: 'agent-004', category: 'network',  name: '星地链路损伤仿真',            description: '模拟雨衰、大气闪烁、多普勒频移、电离层闪烁等链路损伤条件下的传输可靠性智能评估,支持场景模板化与损伤叠加注入。' },
+    { id: 'agent-005', category: 'network',  name: '星座组网仿真测试',             description: '基于数字孪生技术对低轨星座拓扑动态变化、星间路由切换、时频同步进行全链路仿真验证,支持 Walker / 玫瑰星座等多种构型。' },
+    { id: 'agent-006', category: 'network',  name: '网络性能/压力测试',            description: '对星地融合网络的吞吐量、时延、抖动、丢包等关键指标进行智能化性能基准测试与极限压测,支持 7×24 长稳测试编排。' },
+    /* ============ 分类3 · 卫星载荷智能化测试 ============ */
+    { id: 'agent-007', category: 'payload',  name: 'AI 载荷性能/功能测试',         description: '面向星载 AI 处理器的推理性能、能效比及在轨模型更新功能的自动化测试框架,支持 INT8 / FP16 / FP32 多精度评估。' },
+    { id: 'agent-008', category: 'payload',  name: '射频/基带自动化测试',          description: '覆盖卫星转发器射频特性(EIRP / G/T / 相位噪声)与基带调制解调参数的全自动化测试与异常检测,支持批量执行与回归基线。' },
+    { id: 'agent-009', category: 'payload',  name: '极端环境可靠测试',             description: '模拟空间辐射、热真空、振动、原子氧等极端环境下卫星载荷的功能可靠性与寿命预测测试,支持多因子耦合工况编排。' },
+    /* ============ 分类4 · 全链路智能化验收与运维测试 ============ */
+    { id: 'agent-010', category: 'e2e',      name: '在轨运维与故障预测',           description: '基于遥测大数据的卫星平台 + 载荷 + 链路综合健康度评估、异常根因分析与故障预测性维护,支持 LSTM + 物理模型融合预测。' },
+    { id: 'agent-011', category: 'e2e',      name: '安全与攻击测试',               description: '针对星地链路的窃听、干扰、欺骗等攻击场景进行红蓝对抗演练、安全加固验证与渗透测试,覆盖物理层 / 协议层 / 应用层。' },
+    { id: 'agent-012', category: 'e2e',      name: '端到端业务验收测试',           description: '从用户终端到应用服务器的完整业务链路验收测试,覆盖语音、视频、物联网、宽带接入等多类业务场景的 SLA 验证与回归基线。' },
   ]
-  const seededIds = new Set(base.map((a) => a.id))
-  const all = [...base]
-  // 再补足到 36 条
-  let nextId = 13
+  // 用 AGENT_TEMPLATES 为每个 base 注入 icon / color / tags,顺序一一对应
+  const tplByCat = {}
   for (const tpl of AGENT_TEMPLATES) {
-    if (all.length >= 36) break
-    if (all.find((a) => a.category === tpl.category && a.id === `agent-${String(nextId - 1).padStart(3, '0')}`)) continue
-    const cat = tpl.category
-    const pool = AGENT_NAME_POOL[cat]
-    const seed = pool[(nextId - 1) % pool.length]
-    const tag = tpl.tags[0]
-    const id = `agent-${String(nextId).padStart(3, '0')}`
-    if (seededIds.has(id)) { nextId++; continue }
-    const descMap = {
-      terminal: `面向 ${tag} 场景的智能化测试能力,提供脚本生成、缺陷回放与回归闭环。`,
-      network:  `覆盖 ${tag} 维度的星地网络智能化测试,支持性能基准与异常诊断。`,
-      payload:  `针对 ${tag} 类载荷的自动化验证与在轨异常检测,支持多频段、多模式。`,
-      e2e:      `端到端 ${tag} 业务验收与运维智能化,贯通"终端-网络-载荷-业务"全链路。`,
-    }
-    all.push({
-      id,
-      name: `${seed}智能体 ${String.fromCharCode(0x4e00 + ((nextId * 7) % 30))}号`,
-      description: descMap[cat],
-      category: cat,
-      icon: tpl.icon,
-      color_theme: tpl.color_theme,
-      status: STATUS_DIST[nextId % STATUS_DIST.length],
-      tags: tpl.tags,
-    })
-    nextId++
+    if (!tplByCat[tpl.category]) tplByCat[tpl.category] = []
+    tplByCat[tpl.category].push(tpl)
   }
+  const all = base.map((a) => {
+    const tpl = tplByCat[a.category].shift()
+    return { ...a, icon: tpl.icon, color_theme: tpl.color_theme, tags: tpl.tags }
+  })
   // 注入后端模型中的额外字段(usage_count / publisher / version / createdAt)
   return all.map((a, i) => ({
     ...a,
+    status: 'active',
     publisher: ['AEROS · 旗舰', 'AEROS · 平台', '运控中心', '网络中心', '载荷研究院'][i % 5],
     version: `${2 + (i % 4)}.${(i * 3) % 10}.${(i * 7) % 10}`,
     usage_count: Math.round(800 + ((i * 137) % 26000)),
-    rating: a.status === 'draft' ? 0 : (4.5 + ((i * 11) % 50) / 100).toFixed(1) * 1,
+    rating: (4.5 + ((i * 11) % 50) / 100).toFixed(1) * 1,
     createdAt: NOW - ((i * 7 + 30) * DAY),
   }))
 }
@@ -849,10 +798,8 @@ const FILES = [
 /* ============ 审核中心 ============ */
 const REVIEWS = [
   { id: 'r1', employeeName: 'Ka 频段专项测试员',  submitter: '张工',  domain: '终端',     priority: 'P1', status: 'pending',  submittedAt: '2026-06-15 10:24', description: '针对 Ka 频段链路的专项测试与链路预算计算' },
-  { id: 'r2', employeeName: '日志洞察助理',      submitter: '李组',  domain: '通用',     priority: 'P2', status: 'pending',  submittedAt: '2026-06-15 14:02', description: '海量遥测/操作日志的智能检索、聚合与异常洞察' },
   { id: 'r3', employeeName: '异常告警收敛员',    submitter: '王研',  domain: '运维',     priority: 'P3', status: 'rejected', submittedAt: '2026-06-14 09:11', description: '告警风暴智能聚类、抑制与自动派单' },
   { id: 'r4', employeeName: '链路质量评估员',    submitter: '赵博',  domain: '星地网络', priority: 'P2', status: 'approved', submittedAt: '2026-06-13 16:40', description: '链路质量评估与趋势预测' },
-  { id: 'r5', employeeName: '会议纪要员',         submitter: '钱研',  domain: '通用',     priority: 'P3', status: 'pending',  submittedAt: '2026-06-15 18:32', description: '实时转写、自动摘要、行动项提取' },
 ]
 
 /* ============ 审计日志 ============ */
