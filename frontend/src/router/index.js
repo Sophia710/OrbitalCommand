@@ -20,6 +20,7 @@ const routeImports = {
   '/personal-kb/documents/:id': () => import('@/views/KbDocuments.vue'),
   '/columns':        () => import('@/views/Columns.vue'),
   '/columns/article/:id': () => import('@/views/ArticleDetail.vue'),
+  '/columns/:id':    () => import('@/views/ColumnDetail.vue'),
   '/plaza':          () => import('@/views/Plaza.vue'),
   '/my-employees':   () => import('@/views/MyEmployees.vue'),
   '/create':         () => import('@/views/Create.vue'),
@@ -75,6 +76,12 @@ const routes = [
     name: 'ColumnArticle',
     component: () => import('@/views/ArticleDetail.vue'),
     meta: { title: '文章详情', group: 'main', icon: 'Reading', hidden: true },
+  },
+  {
+    path: '/columns/:id',
+    name: 'ColumnDetail',
+    component: () => import('@/views/ColumnDetail.vue'),
+    meta: { title: '专栏详情', group: 'main', icon: 'Reading', hidden: true },
   },
   {
     path: '/plaza',

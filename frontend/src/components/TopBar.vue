@@ -201,7 +201,23 @@ const breadcrumbTrail = computed(() => {
       { id: 'kb-docs',      label: '文档管理',  clickable: false },
     ]
   }
-  // 0.5) 特殊处理:专栏文章详情 (ColumnArticle 路由)
+  // 0.5) 特殊处理:专栏详情 (ColumnDetail 路由)
+  //    归到 智能中心 → 知识库 → 专栏订阅 → 专栏详情
+  //    注意: /columns/:id 需与 /columns(市场)/columns/article/:id 区分
+  if (
+    name === 'columndetail' ||
+    (path.startsWith('columns/') &&
+     !path.startsWith('columns/article/') &&
+     path !== 'columns')
+  ) {
+    return [
+      { id: 'smart-center', label: '智能中心', clickable: true },
+      { id: 'knowledge',    label: '知识库',   clickable: true },
+      { id: 'columns',      label: '专栏订阅', clickable: true },
+      { id: 'column',       label: '专栏详情', clickable: false },
+    ]
+  }
+  // 0.6) 特殊处理:专栏文章详情 (ColumnArticle 路由)
   //    归到 智能中心 → 知识库 → 专栏订阅 → 文章详情
   if (name === 'columnarticle' || path.startsWith('columns/article/')) {
     return [

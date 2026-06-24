@@ -948,6 +948,18 @@ registerRoute('GET /columns/article-detail', {
   },
 })
 
+/* 专栏文章列表(供 /columns/:id 详情页使用) */
+registerRoute('GET /columns/:id/articles', {
+  params: { id: ['string', true], limit: ['number', false] },
+  handler: ({ params } = {}) => {
+    const id = String(params.id)
+    const col = MOCK.columns.find((c) => c.id === id)
+    if (!col) throw new Error('专栏不存在')
+    const limit = Math.min(Math.max(parseInt(params.limit, 10) || 20, 1), 100)
+    return MOCK.buildArticleList(id, limit)
+  },
+})
+
 /* ============================================================
  * 导出给视图层使用的方法
  * ============================================================ */
@@ -981,3 +993,4 @@ export const batchSubscribeColumns = (ids) => http.post('/columns/batch-subscrib
 export const setColumnPrefs     = (body)  => http.post('/columns/prefs', body)
 export const getRecentArticles  = (params)=> http.get('/columns/recent', { params })
 export const getArticleDetail   = (id)    => http.get('/columns/article-detail', { params: { id } })
+export const getColumnArticles  = (id, limit) => http.get(`/columns/${id}/articles`, { params: { limit } })

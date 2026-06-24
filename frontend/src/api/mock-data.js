@@ -755,6 +755,82 @@ function buildArticleContent(articleId, columnId) {
   }
 }
 
+/**
+ * 派生某专栏的文章列表(供 /columns/:id/articles 使用)
+ * 1) 优先从 ARTICLES_CONTENT 抽取该 column 下的精校文章
+ * 2) 不足部分用 buildArticleContent 兜底补齐,序列号递增
+ * 3) 按 published_at 倒序
+ *
+ * @param {string} columnId
+ * @param {number} [limit=20]
+ * @returns {Array<{ id, title, summary, published_at, reading_minutes, column_id, column_title, cover_color, author, author_title, category, tags, likes, views }>}
+ */
+function buildArticleList(columnId, limit = 20) {
+  const col = COLUMNS.find((c) => c.id === columnId)
+  if (!col) return []
+
+  /* 第 1 步:从内容池抽取该专栏文章 */
+  const collected = []
+  const prefix = `${columnId}-art-`
+  for (const [key, content] of Object.entries(ARTICLES_CONTENT)) {
+    if (key.startsWith(prefix)) {
+      const seq = parseInt(key.slice(prefix.length), 10) || 1
+      collected.push({
+        id: key,
+        seq,
+        title: content.title,
+        summary: content.summary,
+        sections: content.sections,
+        tags: content.tags || col.tags,
+      })
+    }
+  }
+  collected.sort((a, b) => a.seq - b.seq)
+
+  /* 第 2 步:兜底补齐到 limit */
+  while (collected.length < limit) {
+    const seq = collected.length + 1
+    const id = `${columnId}-art-${seq}`
+    /* 避免与已有 id 冲突 */
+    if (collected.some((x) => x.id === id)) break
+    const content = buildArticleContent(id, columnId)
+    collected.push({
+      id,
+      seq,
+      title: content.title,
+      summary: content.summary,
+      sections: content.sections,
+      tags: content.tags || col.tags,
+    })
+  }
+
+  /* 第 3 步:组装展示字段 + 倒序 */
+  const now = Date.now()
+  return collected
+    .map((a, idx) => {
+      const stepDays = 7 + (a.seq - 1) * 3
+      return {
+        id: a.id,
+        title: a.title,
+        summary: a.summary,
+        published_at: new Date(now - (a.seq - 1) * stepDays * 24 * 60 * 60 * 1000).toISOString(),
+        reading_minutes: 6 + ((a.seq * 3) % 12),
+        column_id: col.id,
+        column_title: col.title,
+        cover_color: col.cover_color,
+        author: col.author,
+        author_title: col.author_title,
+        category: col.category,
+        tags: a.tags || col.tags,
+        likes: 50 + ((a.seq * 37) % 380),
+        views: 1200 + ((a.seq * 233) % 6000),
+        /* 内部使用,render 时不展示 */
+        _seq: a.seq,
+      }
+    })
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+}
+
 /* ============ 文件树 ============ */
 const FILES = [
   { id: 'f1', pid: null,    name: '产品手册',          type: 'folder' },
@@ -863,6 +939,7 @@ export const MOCK = {
   columns: COLUMNS,
   articlesContent: ARTICLES_CONTENT,
   buildArticleContent,
+  buildArticleList,
 }
 
 export default MOCK

@@ -117,7 +117,7 @@
       </button>
     </div>
 
-    <!-- ============== 订阅列表 · 批量管理 ============== -->
+    <!-- ============== 批量管理 · 提示条(订阅列表) ============== -->
     <div v-if="view === 'mine' && mineTab === 'columns' && subscribedCount" class="columns-toolbar columns-toolbar--mine">
       <div class="columns-batch">
         <button v-if="!batchMode" class="btn btn--ghost btn--sm" @click="enterBatch">
@@ -234,7 +234,7 @@
             v-else
             class="btn btn--success"
             :disabled="pendingId === c.id"
-            @click.stop="quickToggle(c)"
+            @click.stop="openColumn(c)"
           >
             <span v-if="pendingId === c.id" class="btn-spinner btn-spinner--dark" />
             <span v-else>
@@ -410,15 +410,6 @@
       </button>
     </div>
 
-    <!-- ============== SUBSCRIBE DIALOG ============== -->
-    <KbSubscribeDialog
-      :open="dialogOpen"
-      :column="dialogColumn"
-      :saving="dialogSaving"
-      @close="closeDialog"
-      @confirm="onDialogConfirm"
-    />
-
     <!-- ============== TOAST (subtle in-page banner) ============== -->
     <Transition name="banner">
       <div v-if="toast" class="columns-toast" :class="`columns-toast--${toast.type}`">
@@ -436,12 +427,10 @@ import {
   listColumns,
   subscribeColumn,
   unsubscribeColumn,
-  setColumnPrefs,
   getRecentArticles,
 } from '@/api/smart-center'
 import { MOCK } from '@/api/mock-data'
 import { useColumnSubscriptions } from '@/composables/useColumnSubscriptions'
-import KbSubscribeDialog from '@/components/KbSubscribeDialog.vue'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -485,8 +474,6 @@ const {
   subscribe,
   unsubscribe,
   isSubscribed,
-  hasNew,
-  markSeen,
   batchUnsubscribe: batchUnsubscribeStore,
 } = useColumnSubscriptions()
 
@@ -543,10 +530,9 @@ const subscribedList = computed(() => list.value
     return {
       ...c,
       subscribed: true,
-      subscribed_at: r.subscribed_at,
-      notify: r.notify !== false,
-      frequency: r.frequency || 'realtime',
-      has_new: hasNew(c.id, c.latest_at),
+      subscribed_at: r,
+      /* 「新文章」= 订阅后产生的文章:published_at > subscribed_at */
+      has_new: hasNewSinceSub(c, r),
     }
   }),
 )
@@ -583,6 +569,19 @@ function statusCount(s) {
   if (s === 'subscribed')   return list.value.filter((c) => isSubscribed(c.id)).length
   if (s === 'unsubscribed') return list.value.filter((c) => !isSubscribed(c.id)).length
   return list.value.length
+}
+
+/**
+ * 「订阅后产生的新文章」判定:
+ *   - 若专栏有 latest_at 且晚于 subscribed_at,则有新文章
+ *   - 否则降级到 hasNew(若有) / false
+ */
+function hasNewSinceSub(column, subscribedAt) {
+  if (!subscribedAt) return false
+  if (column?.latest_at) {
+    return new Date(column.latest_at).getTime() > subscribedAt
+  }
+  return false
 }
 
 /* === 视图切换 === */
@@ -632,70 +631,35 @@ async function loadRecent() {
 function isUnseen(a) {
   const r = subs.value[a.column_id]
   if (!r) return false
-  return new Date(a.published_at).getTime() > (r.last_seen_at || 0)
+  /* v3: 仅保留 subscribed_at;"未读"= 订阅后产生的文章 */
+  return new Date(a.published_at).getTime() > r
 }
 
 /* === 跳转文章详情 === */
 function openArticle(a) {
-  markSeen(a.column_id, a.published_at)
   router.push(`/columns/article/${a.id}`)
 }
 
+/**
+ * 卡片 / 列表项点击:进入专栏详情页(/columns/:id),
+ * 由 ColumnDetail.vue 提供该专栏的完整文章列表。
+ */
 function openColumn(c) {
-  /* 已订阅:进入专栏(默认打开专栏首篇文章) */
-  if (isSubscribed(c.id)) {
-    openColumnArticles(c)
-  } else {
-    askSubscribe(c)
-  }
+  router.push(`/columns/${c.id}`)
 }
-
 function openColumnArticles(c) {
-  /* 跳转到该专栏的首篇文章 */
-  const firstId = `${c.id}-art-1`
-  router.push(`/columns/article/${firstId}`)
+  router.push(`/columns/${c.id}`)
 }
 
-/* === 订阅确认弹窗 === */
-const dialogOpen = ref(false)
-const dialogColumn = ref(null)
-const dialogSaving = ref(false)
-
-function askSubscribe(c) {
-  dialogColumn.value = c
-  dialogOpen.value = true
-}
-function closeDialog() {
-  dialogOpen.value = false
-  dialogColumn.value = null
-}
-async function onDialogConfirm(prefs) {
-  if (!dialogColumn.value) return
-  dialogSaving.value = true
-  await doSubscribe(dialogColumn.value, prefs)
-  dialogSaving.value = false
-  closeDialog()
-}
-
-/* === 实际订阅/取消订阅执行 === */
-async function doSubscribe(c, prefs = {}) {
+/* === 直接订阅(无弹窗,点击即订阅) === */
+async function doSubscribe(c) {
   pendingId.value = c.id
   const idx = list.value.findIndex((x) => x.id === c.id)
   const beforeSubs = idx >= 0 ? list.value[idx].subscribers : 0
   if (idx >= 0) list.value[idx] = { ...list.value[idx], subscribers: beforeSubs + 1 }
   try {
     await subscribeColumn(c.id)
-    subscribe(c.id, {
-      frequency: prefs.frequency || 'realtime',
-      notify: prefs.notify !== false,
-    })
-    try {
-      await setColumnPrefs({
-        id: c.id,
-        notify: prefs.notify !== false,
-        frequency: prefs.frequency || 'realtime',
-      })
-    } catch { /* 偏好持久化失败不影响主流程 */ }
+    subscribe(c.id)
     pulse(c.id)
     showToast(`已订阅「${c.title}」`, 'success')
     ElMessage.success(`已订阅「${c.title}」`)
@@ -727,11 +691,24 @@ async function doUnsubscribe(c) {
   }
 }
 
+/**
+ * 市场卡片的"订阅/已订阅"按钮逻辑:
+ *   - 未订阅 → 直接订阅
+ *   - 已订阅 → 跳转到专栏详情(不再二次确认)
+ */
+async function askSubscribe(c) {
+  if (isSubscribed(c.id)) {
+    openColumn(c)
+  } else {
+    await doSubscribe(c)
+  }
+}
+
 async function quickToggle(c) {
   if (isSubscribed(c.id)) {
     await doUnsubscribe(c)
   } else {
-    await doSubscribe(c, { frequency: 'realtime', notify: true })
+    await doSubscribe(c)
   }
 }
 

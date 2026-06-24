@@ -1,12 +1,12 @@
 <template>
   <div class="page page-article" :class="{ 'view-enter': entering }">
-    <!-- ============== 顶部工具条:返回 + 文章标题 ============== -->
+    <!-- ============== 顶部工具条:返回专栏 + 文章标题 ============== -->
     <div class="article-toolbar">
-      <button class="article-back" @click="goBack">
+      <button class="article-back" @click="goColumn" :disabled="!article">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="m15 18-6-6 6-6"/>
         </svg>
-        <span>返回</span>
+        <span>{{ article ? `返回「${article.column_title}」` : '返回' }}</span>
       </button>
       <span v-if="article" class="article-toolbar__sep">/</span>
       <span v-if="article" class="article-toolbar__title">{{ article.title }}</span>
@@ -147,6 +147,40 @@
             <button class="article-actions__link" @click="goColumn">进入专栏</button>
           </div>
         </section>
+
+        <!-- ============== 上一篇 / 下一篇 ============== -->
+        <nav v-if="prevArticle || nextArticle" class="article-pager">
+          <button
+            class="article-pager__btn article-pager__btn--prev"
+            :disabled="!prevArticle"
+            @click="goArticle(prevArticle?.id)"
+          >
+            <span class="article-pager__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </span>
+            <span class="article-pager__inner">
+              <span class="article-pager__label">上一篇</span>
+              <span class="article-pager__title">{{ prevArticle?.title || '已是第一篇' }}</span>
+            </span>
+          </button>
+          <button
+            class="article-pager__btn article-pager__btn--next"
+            :disabled="!nextArticle"
+            @click="goArticle(nextArticle?.id)"
+          >
+            <span class="article-pager__inner article-pager__inner--right">
+              <span class="article-pager__label">下一篇</span>
+              <span class="article-pager__title">{{ nextArticle?.title || '已是最后一篇' }}</span>
+            </span>
+            <span class="article-pager__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </span>
+          </button>
+        </nav>
       </article>
 
       <!-- ============== 关联阅读 ============== -->
@@ -185,9 +219,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getArticleDetail } from '@/api/smart-center'
+import { getArticleDetail, getColumnArticles } from '@/api/smart-center'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -197,6 +231,7 @@ const entering = ref(false)
 const loading = ref(false)
 const article = ref(null)
 const relatedList = ref([])
+const allArticles = ref([])
 const liked = ref(false)
 const bookmarked = ref(false)
 
@@ -216,6 +251,22 @@ const usefulCount = computed(() => {
   return base + (liked.value ? 1 : 0)
 })
 
+/* 当前文章在同专栏文章列表中的索引,用于派生上一篇/下一篇 */
+const currentIndex = computed(() => {
+  if (!article.value) return -1
+  return allArticles.value.findIndex((x) => x.id === article.value.id)
+})
+const prevArticle = computed(() => {
+  if (currentIndex.value < 0) return null
+  /* 列表是倒序,索引 0 是最新;上一篇 = 索引 + 1 */
+  return allArticles.value[currentIndex.value + 1] || null
+})
+const nextArticle = computed(() => {
+  if (currentIndex.value < 0) return null
+  /* 下一篇 = 索引 - 1 */
+  return allArticles.value[currentIndex.value - 1] || null
+})
+
 function formatDate(ts) {
   if (!ts) return '—'
   return new Date(ts).toISOString().slice(0, 10)
@@ -225,20 +276,19 @@ function formatNum(n) {
   return n.toLocaleString()
 }
 
-function goBack() {
-  if (window.history.length > 1) {
-    router.back()
+function goColumn() {
+  if (article.value?.column_id) {
+    router.push(`/columns/${article.value.column_id}`)
   } else {
     router.push('/columns')
   }
 }
-function goColumn() {
-  if (article.value?.column_id) {
-    router.push(`/columns`)
-  }
+function goArticle(id) {
+  if (!id) return
+  router.push(`/columns/article/${id}`)
 }
 function openArticle(id) {
-  router.push(`/columns/article/${id}`)
+  goArticle(id)
 }
 
 function toggleLike() {
@@ -261,10 +311,25 @@ function onShare() {
   }
 }
 
+async function loadColumnArticles(columnId) {
+  if (!columnId) {
+    allArticles.value = []
+    return
+  }
+  try {
+    const list = await getColumnArticles(columnId, 100)
+    allArticles.value = Array.isArray(list) ? list : []
+  } catch (e) {
+    console.warn('[ArticleDetail] 拉取专栏文章列表失败,上下篇不可用', e)
+    allArticles.value = []
+  }
+}
+
 async function load() {
   const id = route.params.id
   if (!id) {
     article.value = null
+    allArticles.value = []
     return
   }
   loading.value = true
@@ -272,8 +337,11 @@ async function load() {
     const data = await getArticleDetail(id)
     article.value = data
     relatedList.value = data.related || []
+    /* 加载同专栏文章列表,用于上一篇/下一篇 */
+    await loadColumnArticles(data.column_id)
   } catch (e) {
     article.value = null
+    allArticles.value = []
   } finally {
     loading.value = false
   }
@@ -283,6 +351,8 @@ onMounted(async () => {
   requestAnimationFrame(() => (entering.value = true))
   await load()
 })
+
+watch(() => route.params.id, load)
 </script>
 
 <style scoped>
@@ -477,6 +547,85 @@ onMounted(async () => {
   font-weight: 500; cursor: pointer;
 }
 .article-actions__link:hover { text-decoration: underline; }
+
+/* ============== PAGER (上一篇 / 下一篇) ============== */
+.article-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.article-pager__btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  min-width: 0;
+}
+.article-pager__btn:not(:disabled):hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(20, 24, 40, 0.05);
+}
+.article-pager__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.article-pager__btn--next { justify-content: flex-end; }
+.article-pager__arrow {
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.article-pager__arrow svg { width: 18px; height: 18px; }
+.article-pager__btn:not(:disabled):hover .article-pager__arrow {
+  color: var(--accent);
+}
+.article-pager__btn--prev:not(:disabled):hover .article-pager__arrow {
+  transform: translateX(-2px);
+}
+.article-pager__btn--next:not(:disabled):hover .article-pager__arrow {
+  transform: translateX(2px);
+}
+.article-pager__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.article-pager__inner--right { align-items: flex-end; text-align: right; }
+.article-pager__label {
+  font-size: 11px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.article-pager__title {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .article-pager { grid-template-columns: 1fr; }
+}
 
 /* ============== RELATED ============== */
 .article-related { margin-top: 32px; }
