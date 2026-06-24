@@ -567,6 +567,12 @@ onUnmounted(() => { entering.value = false })
 .kb-card__kpi b {
   display: block; font-family: var(--font-display); font-size: 14px; font-weight: 600;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.kb-card__kpi--time b {
+  white-space: normal; overflow: visible; text-overflow: clip;
+  font-size: 12.5px; letter-spacing: -0.2px; word-break: break-all;
+  line-height: 1.35;
 }
 .kb-card__kpi span { font-size: 10.5px; color: var(--ink-3); font-family: var(--font-mono); }
 

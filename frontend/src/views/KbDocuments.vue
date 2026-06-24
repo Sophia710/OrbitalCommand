@@ -576,6 +576,39 @@ onUnmounted(() => {
 .kdocs-toolbar__left  { display: flex; align-items: center; gap: 12px; flex: 1; flex-wrap: wrap; }
 .kdocs-toolbar__right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* ============== SEG TOGGLE (对齐 kb-toolbar seg-toggle) ============== */
+.seg-toggle { display: inline-flex; padding: 3px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; }
+.seg-toggle__btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; font-size: 12.5px; font-weight: 500;
+  background: transparent; color: var(--ink-2);
+  border: 0; border-radius: 7px; cursor: pointer;
+  transition: all var(--tx-fast) var(--ease);
+}
+.seg-toggle__btn:hover { color: var(--ink); }
+.seg-toggle__btn.is-active {
+  background: var(--surface); color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.seg-toggle__btn span {
+  font-size: 10.5px; padding: 0 6px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-3); font-weight: 500;
+  border: 1px solid var(--line);
+}
+.seg-toggle__btn.is-active span { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+/* ============== SEARCH INPUT (对齐 kb-toolbar search-input) ============== */
+.search-input {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line);
+  width: 280px; transition: all var(--tx-fast) var(--ease);
+}
+.search-input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.search-input svg { width: 16px; height: 16px; color: var(--ink-3); flex-shrink: 0; }
+.search-input input { flex: 1; background: transparent; border: 0; outline: 0; font-size: 12.5px; color: var(--ink); }
+.search-input input::placeholder { color: var(--ink-3); }
+
 /* ============== STATS (对齐 stat-card 风格) ============== */
 .kdocs-stats {
   display: grid; grid-template-columns: repeat(4, 1fr);
