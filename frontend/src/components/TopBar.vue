@@ -278,11 +278,26 @@ const breadcrumbTrail = computed(() => {
   return [{ id: 'workbench', label: '工作台', clickable: false }]
 })
 
-/* 面包屑中间项点击:跳转到对应父级。
- * 父级(数字员工)没有独立路由,这里直接回到默认展开的子项(员工广场),
- * 保证点击行为可见且不会跳到空白页。 */
+/* 面包屑中间项点击:跳转到对应层级页面。
+ *
+ * 实现要点:
+ *   1. 递归搜索整个 nav 树(顶级 / 子级 / 孙级),
+ *      解决子级、孙级面包屑项(如"知识库""个人知识库")在顶级数组中找不到的问题
+ *   2. 命中项若含子级,默认跳到第一个子级,
+ *      保证点击行为可见且不会跳到空白页(父级无独立路由) */
 function goCrumb(id) {
-  const target = MOCK.nav.find((n) => n.id === id)
+  // 在 nav 树中递归查找目标 id
+  const findInNav = (list, targetId) => {
+    for (const n of list) {
+      if (n.id === targetId) return n
+      if (Array.isArray(n.children)) {
+        const found = findInNav(n.children, targetId)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  const target = findInNav(MOCK.nav, id)
   if (!target) return
   if (Array.isArray(target.children) && target.children.length) {
     router.push(`/${target.children[0].id}`)
