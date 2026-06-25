@@ -94,24 +94,72 @@ export function registerRoute(methodPath, config) {
 }
 
 /**
+ * 把带 :param 占位符的路由 pattern 编译成正则
+ *  仅匹配 :name（字母/数字/下划线），不跨越 /
+ * @returns {{ regex: RegExp, names: string[] } | null}
+ */
+function compilePattern(pattern) {
+  const names = []
+  const regexStr = pattern.replace(/:[a-zA-Z_][a-zA-Z0-9_]*/g, (m) => {
+    names.push(m.slice(1))
+    return '([^/]+)'
+  })
+  return { regex: new RegExp(`^${regexStr}$`), names }
+}
+
+/**
+ * 在 MOCK_ROUTES 中按 method + path 查找匹配项
+ *  1) 先做精确字符串匹配（静态路由走快路径）
+ *  2) 失败则遍历含 :param 的路由，做正则匹配并抽取路径参数
+ * @returns {{ config: object, pathParams: object } | null}
+ */
+function resolveRoute(method, path) {
+  const upper = method.toUpperCase()
+  const key = `${upper} ${path}`
+  if (MOCK_ROUTES[key]) return { config: MOCK_ROUTES[key], pathParams: {} }
+
+  for (const [routeKey, config] of Object.entries(MOCK_ROUTES)) {
+    const idx = routeKey.indexOf(' ')
+    if (idx < 0) continue
+    const m = routeKey.slice(0, idx)
+    const pattern = routeKey.slice(idx + 1)
+    if (m !== upper || !pattern.includes(':')) continue
+    const compiled = compilePattern(pattern)
+    if (!compiled) continue
+    const match = path.match(compiled.regex)
+    if (!match) continue
+    const pathParams = {}
+    compiled.names.forEach((name, i) => {
+      try { pathParams[name] = decodeURIComponent(match[i + 1]) }
+      catch { pathParams[name] = match[i + 1] }
+    })
+    return { config, pathParams }
+  }
+  return null
+}
+
+/**
  * 分发一个 mock 请求
  * @returns Promise<{ code, message, data, ts }>
  */
 export async function dispatch(method, path, payload = {}) {
   const key = `${method.toUpperCase()} ${path}`
-  const config = MOCK_ROUTES[key]
+  const resolved = resolveRoute(method, path)
 
   await delay()
 
-  if (!config) {
+  if (!resolved) {
     console.warn(`[mock] no handler for ${key}`)
     return fail(`mock 路由未注册: ${key}`, 404)
   }
 
+  const { config, pathParams } = resolved
   try {
-    validate(payload.params, config.params)
-    validate(payload.body,   config.body)
-    const result = await config.handler(payload)
+    // 路径参数（:id 等）合并到 params，使 handler / validate 都能直接读取
+    const mergedParams = { ...(payload.params || {}), ...pathParams }
+    validate(mergedParams, config.params)
+    validate(payload.body, config.body)
+    const result = await config.handler({ params: mergedParams, body: payload.body })
     if (result && typeof result === 'object' && 'code' in result) return result
     return ok(result)
   } catch (e) {

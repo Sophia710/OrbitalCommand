@@ -29,7 +29,7 @@
   <!-- 全局 Toast 容器 -->
   <ToastContainer />
 
-  <!-- 全局对话抽屉（员工广场 / 我的员工 / 指挥中心 卡片调用） -->
+  <!-- 全局对话抽屉（员工广场 / 我的员工 / 工作台 卡片调用） -->
   <ChatOverlay />
 </template>
 
@@ -44,7 +44,7 @@ const appStore = useAppStore()
 
 // 需要被缓存的页面组件（name 选项）。缓存可大幅减少重复渲染开销。
 const cachedViews = [
-  'Dashboard',
+  'Workbench',
   'Plaza',
   'MyEmployees',
   'Data',

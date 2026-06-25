@@ -237,7 +237,7 @@ const activeRoute = computed(() => {
       }
     }
   }
-  return name === 'myemployees' ? 'my-employees' : 'dashboard'
+  return name === 'myemployees' ? 'my-employees' : 'workbench'
 })
 
 /* 父级展开状态：默认全部展开。
@@ -891,8 +891,7 @@ function onSelect(id) {
   margin-top: 0;
   margin-bottom: 0;
   padding: 32px var(--content-pad) var(--sp-8);
-  /* 注意:不要在此处加 transform/will-change/filter/backdrop-filter,
-     否则会创建新的包含块,破坏子元素的 position: sticky 视口定位。 */
+  transform: translate3d(0, 0, 0);
 }
 
 .mobile-mask {

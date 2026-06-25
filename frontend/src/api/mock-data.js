@@ -11,10 +11,11 @@ const DAY = 24 * HOUR
 
 /* ============ 导航 ============ */
 // 与 prototype copy 的 static index.html 一致：
-//   主导航 = 指挥中心 / 数字员工(展开含 员工广场/我的员工/创建员工) / 智能中心(展开含 智能体/技能/知识库) / 任务监控
+//   主导航 = 工作台 / 数字员工(展开含 员工广场/我的员工/创建员工) / 智能中心(展开含 智能体/技能/知识库) / 任务监控
 //   管理导航 = 审核中心 / 审计日志 / 系统设置
+//   注:原"指挥中心"已合并到"工作台"根路径,直接渲染原 Dashboard 页面内容
 const NAV = [
-  { id: 'dashboard',     label: '指挥中心',   icon: 'Odometer',       desc: '总览与监控',          count: null, group: 'main' },
+  { id: 'workbench',     label: '工作台',     icon: 'Odometer',       desc: '总览与监控',          count: null, group: 'main' },
   {
     id: 'employees',
     label: '数字员工',
@@ -68,7 +69,7 @@ const USER = {
   avatar: '🛰️',
 }
 
-/* ============ 指挥中心 ============ */
+/* ============ 工作台 ============ */
 const KPIS = [
   { key: 'sats',     label: '在轨卫星',     value: 138,  unit: '颗',  trend: 2.3,  up: true,  series: [128,130,131,132,134,135,136,137,138,138,138,138], desc: '本周新增 3 颗备份星' },
   { key: 'terminal', label: '在线用户终端', value: 2164, unit: '台',  trend: 12.6, up: true,  series: [1850,1900,1940,1980,2010,2040,2080,2100,2120,2135,2150,2164], desc: '日活 89% · 健康度 96%' },
@@ -808,7 +809,7 @@ const AUDITS = [
   { id: 'au2', ts: '2026-06-17 09:14:02', user: '李组', action: 'CREATE',  resource: '员工 Ka 频段专项测试员',     result: 'success', ip: '10.21.4.22' },
   { id: 'au3', ts: '2026-06-17 09:08:51', user: '系统',  action: 'EXECUTE', resource: 'CPE Ka 频段吞吐量验证',         result: 'success', ip: '127.0.0.1' },
   { id: 'au4', ts: '2026-06-17 08:55:20', user: '王研', action: 'APPROVE', resource: '员工 链路质量评估员',           result: 'success', ip: '10.21.4.31' },
-  { id: 'au5', ts: '2026-06-17 08:42:14', user: '赵博', action: 'EXECUTE', resource: '下载 SLA-Calculation-Rules.md', result: 'success', ip: '10.21.4.45' },
+  { id: 'au5', ts: '2026-06-17 08:42:14', user: '孙工', action: 'EXECUTE', resource: '下载 SLA-Calculation-Rules.md', result: 'success', ip: '10.21.4.45' },
   { id: 'au6', ts: '2026-06-17 08:30:09', user: '张工', action: 'EXECUTE', resource: '信关站 BJ-02 性能基准',         result: 'failed',  ip: '10.21.4.18' },
   { id: 'au7', ts: '2026-06-17 07:50:00', user: '系统',  action: 'EXECUTE', resource: '知识库基线备份 v2.4.1',         result: 'success', ip: '127.0.0.1' },
   { id: 'au8', ts: '2026-06-17 07:32:11', user: '钱研', action: 'REJECT',  resource: '员工 异常告警收敛员',           result: 'success', ip: '10.21.4.50' },

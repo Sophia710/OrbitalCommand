@@ -33,13 +33,15 @@ const routeImports = {
 }
 
 const routes = [
-  { path: '/', redirect: '/dashboard' },
+  { path: '/', redirect: '/workbench' },
+  // 旧路径兼容:早期版本使用 /dashboard,统一重定向到 /workbench
+  { path: '/dashboard', redirect: '/workbench' },
 
   {
-    path: '/dashboard',
-    name: 'Dashboard',
+    path: '/workbench',
+    name: 'Workbench',
     component: () => import('@/views/Dashboard.vue'),
-    meta: { title: '指挥中心', group: 'main', icon: 'Odometer' },
+    meta: { title: '工作台', group: 'main', icon: 'Odometer' },
   },
   {
     path: '/agents',
@@ -184,7 +186,7 @@ export function startRoutePreload() {
   const ric = (typeof window !== 'undefined' && window.requestIdleCallback)
     || ((cb) => setTimeout(cb, 1200))
   ric(() => {
-    // 排除首屏（Dashboard）与通配路由
+    // 排除首屏（Workbench）与通配路由
     Object.keys(routeImports).forEach(preloadRoute)
   })
 }

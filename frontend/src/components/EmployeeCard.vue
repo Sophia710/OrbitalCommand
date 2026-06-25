@@ -71,7 +71,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 5v14M5 12h14"/>
         </svg>
-        雇佣
+        添加
       </button>
       <button
         v-else
@@ -81,7 +81,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
         </svg>
-        解雇
+        移除
       </button>
     </div>
   </article>
@@ -162,7 +162,7 @@ function formatCalls(n) {
  *     不引入任何自定义色，与系统主题 100% 协调
  *   - 头像 = 系统品牌渐变（紫 → 品红），所有卡片统一
  *   - 顶部高亮线 = 品牌渐变，强化品牌识别
- *   - 状态色仅在语义位置出现（审核中 / 已驳回 / 草稿 / 雇佣 / 解雇）
+ *   - 状态色仅在语义位置出现（审核中 / 已驳回 / 草稿 / 添加 / 移除）
  *   - WCAG AA：正文 ≥ 4.5:1
  * ============================================================ */
 .emp-card {

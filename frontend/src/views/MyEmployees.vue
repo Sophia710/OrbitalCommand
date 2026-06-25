@@ -122,7 +122,7 @@ const activeTab = ref('')
 const tabs = computed(() => [
   { value: '',         label: '全部',     count: myList.value.length },
   { value: 'mine',     label: '我创建的', count: myList.value.filter(m => isMine(m)).length },
-  { value: 'subscribed', label: '我雇佣的', count: myList.value.filter(m => !isMine(m)).length },
+  { value: 'subscribed', label: '我添加的', count: myList.value.filter(m => !isMine(m)).length },
 ])
 
 function isMine(e) {

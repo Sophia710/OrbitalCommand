@@ -16,7 +16,7 @@ export const useUserStore = defineStore('user', {
     /** 通知未读数（演示用） */
     notifications: lsGet('oc_user_notifications', [
       { id: 'n1', title: '审核通知', desc: 'Ka 频段专项测试员 待审核', time: '14:22' },
-      { id: 'n2', title: '系统告警', desc: '信关站 GW-03 出现高危告警', time: '14:18' },
+      { id: 'n2', title: '专栏更新', desc: '《星地链路一席谈》更新了一篇新文章', time: '14:18' },
       { id: 'n3', title: '任务完成', desc: '载荷健康度周报生成完成',  time: '13:36' },
     ]),
   }),

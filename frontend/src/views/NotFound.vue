@@ -26,13 +26,13 @@
     <div class="content">
       <div class="code">404</div>
       <h1 class="title">信号丢失</h1>
-      <p class="desc">你访问的页面已被流星击落或从未存在。<br />请检查地址，或返回指挥中心继续你的任务。</p>
+      <p class="desc">你访问的页面已被流星击落或从未存在。<br />请检查地址，或返回工作台继续你的任务。</p>
       <div class="actions">
-        <button class="btn btn--primary btn--lg" @click="$router.push('/dashboard')">
+        <button class="btn btn--primary btn--lg" @click="$router.push('/workbench')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 12l9-9 9 9M5 10v10h14V10"/>
           </svg>
-          返回指挥中心
+          返回工作台
         </button>
         <button class="btn btn--ghost btn--lg" @click="$router.back()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">

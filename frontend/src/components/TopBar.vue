@@ -20,9 +20,8 @@
       </button>
 
       <nav class="breadcrumb desktop-only" aria-label="面包屑">
-        <a class="breadcrumb__item" @click="router.push('/dashboard')">工作台</a>
         <template v-for="(seg, i) in breadcrumbTrail" :key="seg.id || i">
-          <span class="breadcrumb__sep">/</span>
+          <span v-if="i > 0" class="breadcrumb__sep">/</span>
           <a
             v-if="seg.clickable && i < breadcrumbTrail.length - 1"
             class="breadcrumb__item"
@@ -187,10 +186,17 @@ function onSearch(v) { appStore.setTopbarQuery(v) }
 const notifCount = computed(() => userStore.notifications?.length || 0)
 
 /* 完整面包屑链：根据当前路由解析归属,支持父级 + 子级 + 三级孙级多级导航
- * 返回 { id, label, clickable }[] 数组,最后一项为当前页(不可点击) */
+ * 返回 { id, label, clickable }[] 数组,最后一项为当前页(不可点击)
+ *
+ * 设计原则:面包屑与侧边栏严格对齐,只显示从根到当前页的路径,
+ * 不再以"工作台"作为强制前缀,避免在选择其他导航项时出现多余的"工作台"层级 */
 const breadcrumbTrail = computed(() => {
   const name = String(route.name || '').toLowerCase()
   const path = route.path.replace(/^\//, '').toLowerCase()
+  // 工作台为根页面,面包屑仅显示"工作台"一项,与侧边栏选中态一致
+  if (name === 'workbench' || path === 'workbench') {
+    return [{ id: 'workbench', label: '工作台', clickable: false }]
+  }
   // 0) 特殊处理:知识库文档管理 (KbDocuments 路由)
   //    归到 智能中心 → 知识库 → 个人知识库 → 文档管理
   if (name === 'kbdocuments' || path.startsWith('personal-kb/')) {
@@ -268,8 +274,8 @@ const breadcrumbTrail = computed(() => {
       return [{ id: n.id, label: n.label, clickable: false }]
     }
   }
-  // 4) 默认 fallback: 指挥中心
-  return [{ id: 'dashboard', label: '指挥中心', clickable: false }]
+  // 4) 默认 fallback: 未匹配到导航时(例如 404),面包屑显示"工作台"
+  return [{ id: 'workbench', label: '工作台', clickable: false }]
 })
 
 /* 面包屑中间项点击:跳转到对应父级。

@@ -333,9 +333,7 @@ onMounted(() => {
 .page { display: flex; flex-direction: column; gap: var(--sp-4); }
 
 /* ============== HEADER ============== */
-/* 页面头部:滚动时固定在顶部栏下方,不随页面滚动 */
 .create-header {
-  --create-header-h: 80px; /* 头部高度估算(14px*2 padding + 48px logo + 2px border) */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -346,9 +344,6 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   flex-wrap: wrap;
   backdrop-filter: var(--glass-blur);
-  position: sticky;
-  top: var(--topbar-h);
-  z-index: 10;
 }
 .create-header__left { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .create-header__logo {
@@ -404,28 +399,11 @@ onMounted(() => {
   gap: var(--sp-4);
   align-items: start;
 }
-.create-form-col {
+.create-form-col, .create-preview-col {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
   min-width: 0;
-}
-/* 右侧预览列:固定在视口右侧,不随页面滚动;高度自适应视口 */
-.create-preview-col {
-  position: sticky;
-  /* 顶部栏 + 粘性头部 + 间距 = 头部底沿下方 16px 处开始粘住 */
-  top: calc(var(--topbar-h) + var(--create-header-h) + var(--sp-4));
-  align-self: start;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  min-width: 0;
-  /* 高度 = 视口高度 − 顶部栏 − 粘性头部 − 间距:整列完整显示在视口内,不被裁切 */
-  height: calc(100vh - var(--topbar-h) - var(--create-header-h) - var(--sp-4));
-  max-height: calc(100vh - var(--topbar-h) - var(--create-header-h) - var(--sp-4));
-  box-sizing: border-box;
-  overflow: hidden; /* 防止子元素溢出列 */
-  z-index: 5;
 }
 
 /* ============== FORM CARD ============== */
@@ -562,9 +540,7 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 100%;
+  min-height: 480px;
   backdrop-filter: var(--glass-blur);
 }
 .create-chat__head {
@@ -624,15 +600,13 @@ onMounted(() => {
 .iconbtn svg { width: 16px; height: 16px; }
 
 .create-chat__body {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1;
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  max-height: 420px;
 }
 .create-chat__msg {
   padding: 10px 14px;
@@ -692,7 +666,6 @@ onMounted(() => {
 
 /* ============== HINT ============== */
 .create-preview__hint {
-  flex-shrink: 0; /* 防止在窄屏下被聊天区挤压 */
   padding: 16px 18px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -720,28 +693,17 @@ onMounted(() => {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.45; }
 }
-/* view-enter 使用 opacity + margin-top 位移(非 transform),
-   避免在 .page 上留下 transform 而创建新的包含块,破坏子元素 position: sticky 视口定位 */
 .view-enter { animation: viewEnter 0.42s var(--ease) both; }
 @keyframes viewEnter {
-  from { opacity: 0; margin-top: 8px; }
-  to   { opacity: 1; margin-top: 0; }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 1100px) {
   .create-ws { grid-template-columns: 1fr; }
-  /* 窄屏下取消 sticky,改为自然堆叠 */
-  .create-header { position: static; }
-  .create-preview-col {
-    position: static;
-    height: auto;
-    max-height: none;
-  }
-  .create-chat { min-height: 480px; }
 }
 @media (max-width: 640px) {
   .form-grid { grid-template-columns: 1fr; }
   .create-header { flex-direction: column; align-items: flex-start; }
-  .create-chat { min-height: 420px; }
 }
 </style>

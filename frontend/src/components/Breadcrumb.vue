@@ -2,7 +2,7 @@
   <nav class="crumb" aria-label="breadcrumb">
     <ol>
       <li>
-        <router-link to="/dashboard">
+        <router-link to="/workbench">
           <el-icon><HomeFilled /></el-icon>
           <span>OrbitalCommand</span>
         </router-link>

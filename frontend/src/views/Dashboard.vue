@@ -238,7 +238,7 @@
 </template>
 
 <script setup>
-defineOptions({ name: 'Dashboard' })
+defineOptions({ name: 'Workbench' })
 import { ref, onMounted, computed, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import VChart from 'vue-echarts'
