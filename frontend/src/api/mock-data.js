@@ -62,7 +62,7 @@ const NAV = [
 /* ============ 用户 ============ */
 const USER = {
   id: 'u_001',
-  name: '李航宇',
+  name: '星小智',
   role: 'admin',
   title: '系统管理员',
   team: '运控中心 · 高级工程师',

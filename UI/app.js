@@ -1644,7 +1644,7 @@
       select: [
         { key: 'user', label: '用户', options: [
           { value: '全部', label: '全部' },
-          { value: '李航宇', label: '李航宇' },
+          { value: '星小智', label: '星小智' },
           { value: '王雪', label: '王雪' },
           { value: '张博', label: '张博' },
           { value: '陈默', label: '陈默' },
