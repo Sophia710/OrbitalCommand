@@ -96,67 +96,103 @@
         </svg>
       </button>
 
-      <!-- 主题切换 -->
-      <button
-        id="themeToggle"
-        class="iconbtn"
-        :class="{ 'is-switching': switching }"
-        :aria-label="appStore.theme === 'dark' ? '切换浅色' : '切换深色'"
-        @click="onToggleTheme"
-      >
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-        </svg>
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-      </button>
-
-      <!-- 设置 -->
-      <button
-        id="settingsBtn"
-        class="iconbtn"
-        aria-label="设置"
-        title="系统设置"
-        @click="goSettings"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.16.66.43.86.77s.27.71.24 1.09c.6.16 1.07.66 1.27 1.27.2.6.13 1.27-.24 1.82l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z"/>
-        </svg>
-      </button>
-
-      <!-- 退出 -->
-      <button
-        id="logoutBtn"
-        class="iconbtn desktop-only"
-        aria-label="退出"
-        title="退出登录"
-        @click="onLogout"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <path d="M16 17l5-5-5-5"/>
-          <path d="M21 12H9"/>
-        </svg>
-      </button>
-
-      <!-- 用户 chip（对齐 prototype copy 样式，LZ 头像 + 姓名 + 职位） -->
-      <div class="user-chip">
-        <div class="avatar">
-          <span>{{ userStore.initials || 'LZ' }}</span>
-          <i class="avatar__status"></i>
+      <!-- 用户 chip 包裹：触发下拉菜单 -->
+      <div class="user-chip-wrap">
+        <div
+          class="user-chip"
+          :class="{ active: userMenuOpen }"
+          role="button"
+          tabindex="0"
+          :aria-expanded="userMenuOpen"
+          aria-haspopup="menu"
+          aria-label="用户菜单"
+          @click="userMenuOpen = !userMenuOpen"
+          @keydown.enter.prevent="userMenuOpen = !userMenuOpen"
+          @keydown.space.prevent="userMenuOpen = !userMenuOpen"
+        >
+          <div class="avatar">
+            <span>{{ userStore.initials || 'LZ' }}</span>
+            <i class="avatar__status"></i>
+          </div>
+          <div class="user-chip__text hide-on-narrow">
+            <div class="user-chip__name">{{ userStore.name || '李正' }}</div>
+            <div class="user-chip__role">{{ userStore.title || '运营主管' }}</div>
+          </div>
         </div>
-        <div class="user-chip__text hide-on-narrow">
-          <div class="user-chip__name">{{ userStore.name || '李正' }}</div>
-          <div class="user-chip__role">{{ userStore.title || '运营主管' }}</div>
-        </div>
+
+        <!-- 用户下拉菜单：把原先的三个按钮移到这里 -->
+        <transition name="popover">
+          <div
+            v-if="userMenuOpen"
+            class="user-menu"
+            role="menu"
+            @click.stop
+          >
+            <div class="user-menu__head">
+              <div class="avatar avatar--lg">
+                <span>{{ userStore.initials || 'LZ' }}</span>
+                <i class="avatar__status"></i>
+              </div>
+              <div class="user-menu__info">
+                <div class="user-menu__name">{{ userStore.name || '李正' }}</div>
+                <div class="user-menu__role">{{ userStore.title || '运营主管' }}</div>
+              </div>
+            </div>
+            <div class="user-menu__divider" />
+
+            <!-- 主题切换（保留原 #themeToggle 的图标切换样式） -->
+            <button
+              id="themeToggle"
+              class="user-menu__item"
+              :class="{ 'is-switching': switching }"
+              :aria-label="appStore.theme === 'dark' ? '切换浅色' : '切换深色'"
+              role="menuitem"
+              @click="onToggleTheme"
+            >
+              <span class="user-menu__icon" aria-hidden="true">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="4"/>
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              </span>
+              <span class="user-menu__label">切换主题</span>
+              <span class="user-menu__value">{{ appStore.theme === 'dark' ? '深色' : '浅色' }}</span>
+            </button>
+
+            <div class="user-menu__divider" />
+
+            <!-- 退出 -->
+            <button
+              id="logoutBtn"
+              class="user-menu__item user-menu__item--danger"
+              aria-label="退出"
+              title="退出登录"
+              role="menuitem"
+              @click="onLogout"
+            >
+              <span class="user-menu__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <path d="M16 17l5-5-5-5"/>
+                  <path d="M21 12H9"/>
+                </svg>
+              </span>
+              <span class="user-menu__label">退出登录</span>
+            </button>
+          </div>
+        </transition>
       </div>
     </div>
 
-    <!-- 弹层遮罩 -->
-    <div v-if="notifOpen" class="popover-mask" @click="notifOpen = false" />
+    <!-- 弹层遮罩：任一弹层打开时显示，点击关闭全部 -->
+    <div
+      v-if="notifOpen || userMenuOpen"
+      class="popover-mask"
+      @click="closeAllPopovers"
+    />
   </header>
 </template>
 
@@ -177,6 +213,7 @@ const router = useRouter()
 
 const query = ref(appStore.topbarQuery || '')
 const notifOpen = ref(false)
+const userMenuOpen = ref(false)
 const switching = ref(false)
 
 watch(query, (v) => appStore.setTopbarQuery(v))
@@ -320,17 +357,19 @@ function onLogout() {
   toast.success('已退出（演示）')
 }
 
-function goSettings() {
-  router.push('/settings')
-}
-
 function onKey(e) {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault()
     const el = document.querySelector('.topbar__search input')
     el?.focus()
   }
-  if (e.key === 'Escape') notifOpen.value = false
+  if (e.key === 'Escape') closeAllPopovers()
+}
+
+/* 关闭所有顶部弹层（通知 / 用户菜单），用于点遮罩或按 Esc */
+function closeAllPopovers() {
+  notifOpen.value = false
+  userMenuOpen.value = false
 }
 onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
@@ -526,6 +565,7 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
 }
 
 /* ============== USER CHIP ============== */
+.user-chip-wrap { position: relative; }
 .user-chip {
   display: flex;
   align-items: center;
@@ -539,9 +579,21 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
     border-color var(--dur-fast) var(--ease),
     transform var(--dur-fast) var(--ease);
   cursor: pointer;
+  /* 让 chip 可以接收键盘焦点，配合 tabindex/role=button */
+  user-select: none;
+  outline: 0;
 }
 .user-chip:hover { background: var(--surface-3); border-color: var(--line-2); }
 .user-chip:active { transform: scale(0.97); }
+.user-chip:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.user-chip.active {
+  background: var(--surface-3);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
 .avatar {
   position: relative;
   width: 32px;
@@ -556,6 +608,11 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
   font-weight: 600;
   color: #fff;
 }
+.avatar--lg {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
 .avatar__status {
   position: absolute;
   right: 0;
@@ -566,6 +623,11 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
   border-radius: 50%;
   border: 2px solid var(--bg);
   box-shadow: 0 0 8px var(--ok);
+}
+.avatar--lg .avatar__status {
+  width: 10px;
+  height: 10px;
+  border-width: 2px;
 }
 .user-chip__text { display: flex; flex-direction: column; line-height: 1.2; }
 .user-chip__name { font-size: 12.5px; font-weight: 500; color: var(--ink); }
@@ -650,6 +712,115 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
     background-color var(--dur-fast) var(--ease);
 }
 .link-btn:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* ============== USER MENU (popover) ============== */
+/* 复用 .popover-* 过渡，复用 .popover-mask 关闭逻辑 */
+.user-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 260px;
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: 30;
+  padding: 6px;
+  transform: translate3d(0, 0, 0);
+}
+.user-menu__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 12px;
+}
+.user-menu__info { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.user-menu__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-menu__role {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+.user-menu__divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--line);
+}
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* 60fps：仅过渡 background / color */
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+.user-menu__item:hover { background: var(--surface-2); }
+.user-menu__item:active { transform: scale(0.98); }
+.user-menu__item:focus-visible {
+  outline: 0;
+  background: var(--surface-2);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.user-menu__item--danger { color: var(--danger); }
+.user-menu__item--danger:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.user-menu__icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+.user-menu__item--danger .user-menu__icon { color: var(--danger); }
+.user-menu__icon svg { width: 18px; height: 18px; }
+.user-menu__label { flex: 1; min-width: 0; }
+.user-menu__value {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* 主题按钮里的 sun / moon 在下拉框中应使用 item 内部尺寸，并保留切换动画 */
+.user-menu #themeToggle .icon-sun,
+.user-menu #themeToggle .icon-moon {
+  width: 18px;
+  height: 18px;
+  transition:
+    transform 0.32s var(--ease),
+    opacity 0.22s var(--ease);
+}
+.user-menu #themeToggle.is-switching .icon-sun,
+.user-menu #themeToggle.is-switching .icon-moon {
+  transform: rotate(180deg) scale(0.6);
+  opacity: 0;
+}
+/* 下拉框内主题按钮 hover 不再改变颜色（避免与 item hover 冲突） */
+.user-menu #themeToggle:hover { color: inherit; }
 
 /* ============== RESPONSIVE ============== */
 .mobile-only  { display: none; }

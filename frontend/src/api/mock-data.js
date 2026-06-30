@@ -12,8 +12,9 @@ const DAY = 24 * HOUR
 /* ============ 导航 ============ */
 // 与 prototype copy 的 static index.html 一致：
 //   主导航 = 工作台 / 数字员工(展开含 员工广场/我的员工/创建员工) / 智能中心(展开含 智能体/技能/知识库) / 任务监控
-//   管理导航 = 审核中心 / 审计日志 / 系统设置
+//   管理导航 = 审核中心 / 审计日志
 //   注:原"指挥中心"已合并到"工作台"根路径,直接渲染原 Dashboard 页面内容
+//   注:"系统设置"入口已永久移除,统一通过 TopBar 用户菜单完成主题/退出等操作
 const NAV = [
   { id: 'workbench',     label: '工作台',     icon: 'Odometer',       desc: '总览与监控',          count: null, group: 'main' },
   {
@@ -56,7 +57,6 @@ const NAV = [
   { id: 'tasks',         label: '任务监控',   icon: 'Connection',     desc: '全链路任务追踪',      count: 5,    live: true, group: 'main' },
   { id: 'review',        label: '审核中心',   icon: 'Stamp',          desc: '员工上架审核',        count: 3,    group: 'aux' },
   { id: 'audit',         label: '审计日志',   icon: 'Document',       desc: '操作与合规审计',      count: null, group: 'aux' },
-  { id: 'settings',      label: '系统设置',   icon: 'Setting',        desc: '主题、模型与权限',    count: null, group: 'aux' },
 ]
 
 /* ============ 用户 ============ */
@@ -814,28 +814,10 @@ const AUDITS = [
   { id: 'au7', ts: '2026-06-17 07:50:00', user: '系统',  action: 'EXECUTE', resource: '知识库基线备份 v2.4.1',         result: 'success', ip: '127.0.0.1' },
   { id: 'au8', ts: '2026-06-17 07:32:11', user: '钱研', action: 'REJECT',  resource: '员工 异常告警收敛员',           result: 'success', ip: '10.21.4.50' },
   { id: 'au9', ts: '2026-06-17 06:18:00', user: '系统',  action: 'EXECUTE', resource: '夜间健康巡检',                  result: 'success', ip: '127.0.0.1' },
-  { id: 'au10',ts: '2026-06-17 05:10:24', user: '李组', action: 'UPDATE',  resource: '系统设置 / 大模型',            result: 'success', ip: '10.21.4.22' },
+  { id: 'au10',ts: '2026-06-17 05:10:24', user: '李组', action: 'UPDATE',  resource: '知识库 / 大模型',              result: 'success', ip: '10.21.4.22' },
   { id: 'au11',ts: '2026-06-17 04:42:18', user: '王研', action: 'DELETE',  resource: '文件 BJ-02-OLD-2024.yaml',     result: 'success', ip: '10.21.4.31' },
   { id: 'au12',ts: '2026-06-17 03:24:01', user: '张工', action: 'LOGIN',   resource: '主控台',                        result: 'success', ip: '10.21.4.18' },
 ]
-
-/* ============ 系统设置 ============ */
-const SETTINGS = {
-  profile: { name: USER.name, role: USER.role, theme: 'dark' },
-  models:  { default: 'qwen3-235b', temperature: 0.7, maxTokens: 8192, topP: 0.9, systemPrefix: '你是一名严谨的卫星互联网工程师...' },
-  system:  { latency: 800, jitter: 350, pageSize: 10, streaming: true, telemetry: true },
-  roles: [
-    { key: 'admin',  label: '系统管理员', desc: '全部权限' },
-    { key: 'ops',    label: '运控工程师', desc: '运控相关操作' },
-    { key: 'review', label: '审核员',     desc: '员工上架审核' },
-    { key: 'user',   label: '普通用户',   desc: '只读 + 基础对话' },
-  ],
-  languages: [
-    { key: 'zh-CN', label: '简体中文' },
-    { key: 'en-US', label: 'English' },
-    { key: 'ja-JP', label: '日本語' },
-  ],
-}
 
 export const MOCK = {
   // 全局
@@ -868,7 +850,6 @@ export const MOCK = {
   // 治理
   reviews: REVIEWS,
   audits: AUDITS,
-  settings: SETTINGS,
 
   // 智能中心
   agentCategoryLabels: AGENT_CATEGORY_LABELS,

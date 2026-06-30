@@ -139,30 +139,6 @@ registerRoute('GET /audit/list', {
   },
 })
 
-/* ------------ 系统设置 ------------ */
-registerRoute('GET /settings/get', {
-  handler: () => ({ ...MOCK.settings }),
-})
-
-registerRoute('POST /settings/save', {
-  handler: ({ body } = {}) => {
-    Object.assign(MOCK.settings, body || {})
-    return { ...MOCK.settings }
-  },
-})
-
-registerRoute('GET /settings/role', {
-  handler: () => MOCK.user,
-})
-
-registerRoute('POST /settings/role', {
-  body: { role: ['string', true] },
-  handler: ({ body } = {}) => {
-    MOCK.user.role = body.role
-    return { ...MOCK.user }
-  },
-})
-
 /* ------------ 暴露给视图的方法 ------------ */
 export function listTasks(params)        { return http.get('/tasks/list', { params }) }
 export function cancelTask(id)           { return http.post('/tasks/cancel', { id }) }
@@ -175,7 +151,3 @@ export function listReviewsPending()     { return http.get('/review/pending') }
 export function approveReview(id)        { return http.post('/review/approve', { id }) }
 export function rejectReview(id, reason) { return http.post('/review/reject', { id, reason }) }
 export function listAudits(params)       { return http.get('/audit/list', { params }) }
-export function getSettings()            { return http.get('/settings/get') }
-export function saveSettings(p)          { return http.post('/settings/save', p) }
-export function getRole()                { return http.get('/settings/role') }
-export function setRole(p)               { return http.post('/settings/role', p) }
