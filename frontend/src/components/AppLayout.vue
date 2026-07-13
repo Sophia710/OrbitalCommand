@@ -56,7 +56,7 @@
               :class="{ 'is-collapsed-hide': appStore.sidebarCollapsed }"
             >
               <template v-for="child in item.children" :key="child.id">
-                <!-- 嵌套子分组:二级项本身还有 children(如 智能中心 → 知识库 → 个人知识库/专栏订阅) -->
+                <!-- 嵌套子分组:二级项本身还有 children(目前知识库已无三级子项,保留结构以备扩展) -->
                 <div
                   v-if="Array.isArray(child.children) && child.children.length"
                   class="nav__group nav__group--nested"
@@ -227,7 +227,7 @@ const activeRoute = computed(() => {
         const cid = c.id.toLowerCase()
         const cRouteId = cid === 'my-employees' ? 'myemployees' : cid
         if (name === cRouteId || path === cid) return c.id
-        // 三级孙项(如 智能中心 → 知识库 → 个人知识库/专栏订阅)
+        // 三级孙项(目前知识库下已无三级子项,保留结构以备扩展)
         if (Array.isArray(c.children)) {
           for (const gc of c.children) {
             const gcid = gc.id.toLowerCase()
@@ -328,7 +328,7 @@ const ICON_PATHS = {
   Setting:     '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.16.66.43.86.77s.27.71.24 1.09c.6.16 1.07.66 1.27 1.27.2.6.13 1.27-.24 1.82l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z"/>',
   // 数字员工 — 多人群组
   Group:       '<circle cx="9" cy="8" r="3.2"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15 13.5c2.5 0 6 1.2 6 3.5"/>',
-  // 智能中心 — 知识库/专栏相关
+  // 智能中心 — 知识库相关
   Reading:     '<path d="M2 4h6a4 4 0 0 1 4 4v12"/><path d="M22 4h-6a4 4 0 0 0-4 4v12"/><path d="M2 4v15h6a4 4 0 0 1 4 1"/>',
 }
 function iconSvg(name) {

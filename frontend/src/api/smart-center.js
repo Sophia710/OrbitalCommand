@@ -1,97 +1,25 @@
 /**
- * 智能中心 · 智能体 / 技能 / 知识库 / 专栏
+ * 智能中心 · 技能 / 知识库
  * ----------------------------------------------------------------------
  *  完整对齐后端 REST 接口：
- *    GET  /agents/list            -> getAgents (category | keyword | sort)
- *    GET  /agents/categories      -> 4 大分类汇总
- *    GET  /agents/detail          -> 智能体详情 + 关联技能
  *    GET  /skills/list            -> 技能列表
- *    GET  /skills/detail          -> 技能详情 + 关联智能体
+ *    GET  /skills/detail          -> 技能详情 + 关联员工
  *    GET  /knowledge-bases/list   -> 知识库列表
  *    GET  /knowledge-bases/detail -> 知识库详情 + 文档列表
  *    GET  /knowledge-bases/stats  -> 知识库 / 文档 统计
- *    GET  /columns/list           -> 专栏列表
- *    GET  /columns/detail         -> 专栏详情 + 模拟文章列表
  *    POST /knowledge-bases        -> 创建知识库
  *    POST /documents              -> 上传文档(模拟)
+ *
+ *  注:智能体模块已下线,以下 API 全部移除
+ *    GET  /agents/list, GET /agents/categories, GET /agents/detail
+ *  注:专栏订阅已下线(2026-07),以下 API 全部移除
+ *    GET  /columns/list, GET /columns/detail, GET /columns/:id/articles
+ *    GET  /columns/article-detail, GET /columns/recent
+ *    POST /columns/subscribe, POST /columns/unsubscribe
+ *    POST /columns/batch-subscribe, POST /columns/prefs
  */
 import http from './index'
 import { registerRoute, MOCK, page, uid } from './mock'
-
-/* ============================================================
- * 智能体 · Agents
- * ============================================================ */
-registerRoute('GET /agents/list', {
-  params: {
-    category: ['string',  false],
-    keyword:  ['string',  false],
-    status:   ['string',  false],
-    sort:     ['string',  false],
-    pageNo:   ['number',  false],
-    pageSize: ['number',  false],
-  },
-  handler: ({ params } = {}) => {
-    let list = [...MOCK.agents]
-    if (params?.category && params.category !== 'all') {
-      list = list.filter((a) => a.category === params.category)
-    }
-    if (params?.status) {
-      list = list.filter((a) => a.status === params.status)
-    }
-    if (params?.keyword) {
-      const k = String(params.keyword).toLowerCase()
-      list = list.filter(
-        (a) =>
-          a.name.toLowerCase().includes(k) ||
-          (a.description || '').toLowerCase().includes(k) ||
-          (a.tags || []).some((t) => t.toLowerCase().includes(k)),
-      )
-    }
-    if (params?.sort === 'usage')   list.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
-    else if (params?.sort === 'rating')  list.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-    else if (params?.sort === 'newest')  list.sort((a, b) => b.createdAt - a.createdAt)
-    return page(list, Number(params?.pageNo || 1), Number(params?.pageSize || 24))
-  },
-})
-
-/* 4 大分类聚合,对应后端 categories 字段 */
-registerRoute('GET /agents/categories', {
-  handler: () => {
-    const list = MOCK.agents
-    const keys = MOCK.agentCategoryKeys
-    const categories = keys.map((k) => ({
-      key: k,
-      name: MOCK.agentCategoryLabels[k],
-      count: list.filter((a) => a.category === k).length,
-    }))
-    return {
-      total: list.length,
-      active:   list.filter((a) => a.status === 'active').length,
-      maintenance: list.filter((a) => a.status === 'maintenance').length,
-      draft:    list.filter((a) => a.status === 'draft').length,
-      categories,
-    }
-  },
-})
-
-/* 智能体详情 + 关联技能 + 模拟最近对话 */
-registerRoute('GET /agents/detail', {
-  params: { id: ['string', true] },
-  handler: ({ params } = {}) => {
-    const a = MOCK.agents.find((x) => x.id === params.id)
-    if (!a) throw new Error('智能体不存在')
-    const linkedSkills = MOCK.skillsFull.filter((s) => s.category === a.category).slice(0, 3)
-    return {
-      ...a,
-      linkedSkills,
-      recentConversations: Array.from({ length: 4 }, (_, i) => ({
-        id: `conv-${a.id}-${i + 1}`,
-        title: ['链路异常诊断', '参数调优建议', '报告生成请求', '故障复盘'][i],
-        updated_at: new Date(Date.now() - i * 3600_000).toISOString(),
-      })),
-    }
-  },
-})
 
 /* ============================================================
  * 技能 · Skills
@@ -118,7 +46,7 @@ registerRoute('GET /skills/list', {
       )
     }
     if (params?.sort === 'usage')   list.sort((a, b) => b.usage_count - a.usage_count)
-    else if (params?.sort === 'agents')  list.sort((a, b) => b.agents_count - a.agents_count)
+    else if (params?.sort === 'employees')  list.sort((a, b) => (b.employees_count || 0) - (a.employees_count || 0))
     else if (params?.sort === 'newest')  list.sort((a, b) => b.createdAt - a.createdAt)
     return page(list, Number(params?.pageNo || 1), Number(params?.pageSize || 24))
   },
@@ -129,14 +57,18 @@ registerRoute('GET /skills/detail', {
   handler: ({ params } = {}) => {
     const s = MOCK.skillsFull.find((x) => x.id === params.id)
     if (!s) throw new Error('技能不存在')
-    /* 关联智能体:同分类 + 部分匹配 */
-    const linked = MOCK.agents
-      .filter((a) => a.category === s.category || s.category === 'general')
+    /* 关联员工:从数字员工池中按 domain / 标签匹配 */
+    const linked = (MOCK.employees || [])
+      .filter((e) => Array.isArray(e.skills) && e.skills.includes(s.name))
       .slice(0, 6)
-      .map((a) => ({
-        id: a.id, name: a.name, category: a.category, color_theme: a.color_theme, usage_count: a.usage_count,
+      .map((e) => ({
+        id: e.id,
+        name: e.name,
+        domain: e.domain,
+        color: e.avatar,
+        usage: e.usage || 0,
       }))
-    return { ...s, linkedAgents: linked }
+    return { ...s, linkedEmployees: linked }
   },
 })
 
@@ -310,7 +242,7 @@ registerRoute('GET /documents/detail', {
     }
     if (['md', 'markdown', 'txt'].includes(ext)) {
       base.preview_kind = 'markdown'
-      base.preview_body = `# ${doc.filename}\n\n## 概述\n\n本文档是 **${doc.filename}** (${doc.format} / ${(doc.size_bytes/1024).toFixed(1)} KB) 的预览内容。\n\n## 关键章节\n\n- 第 1 章:背景与目标\n- 第 2 章:测试方法\n- 第 3 章:结果分析\n- 第 4 章:复盘与改进\n\n## 摘要\n\n> 这是文档的 Markdown 预览区域,完整 RAG 索引已就绪,可被任意智能体引用。\n\n\`\`\`text\n${doc.id} · 已被 ${Math.round(Math.random() * 12) + 3} 个智能体引用\n\`\`\`\n`
+      base.preview_body = `# ${doc.filename}\n\n## 概述\n\n本文档是 **${doc.filename}** (${doc.format} / ${(doc.size_bytes/1024).toFixed(1)} KB) 的预览内容。\n\n## 关键章节\n\n- 第 1 章:背景与目标\n- 第 2 章:测试方法\n- 第 3 章:结果分析\n- 第 4 章:复盘与改进\n\n## 摘要\n\n> 这是文档的 Markdown 预览区域,完整 RAG 索引已就绪,可被任意数字员工引用。\n\n\`\`\`text\n${doc.id} · 已被 ${Math.round(Math.random() * 12) + 3} 个数字员工引用\n\`\`\`\n`
     } else if (ext === 'json') {
       base.preview_kind = 'code'
       base.preview_body = JSON.stringify({
@@ -551,7 +483,7 @@ registerRoute('GET /documents/versions', {
       version: baseVer,
       author: doc.modifier_name || doc.uploader_name,
       modified_at: doc.last_modified || doc.upload_time,
-      changelog: '当前版本 · 已建立 RAG 索引,可被智能体引用',
+      changelog: '当前版本 · 已建立 RAG 索引,可被数字员工引用',
       size_bytes: doc.size_bytes,
       is_current: true,
     })
@@ -759,213 +691,21 @@ registerRoute('DELETE /knowledge-bases', {
   },
 })
 
-/* ============================================================
- * 专栏 · Columns
- * ============================================================ */
-registerRoute('GET /columns/list', {
-  params: {
-    category: ['string', false],
-    keyword:  ['string', false],
-  },
-  handler: ({ params } = {}) => {
-    let list = [...MOCK.columns]
-    if (params?.category && params.category !== 'all') {
-      list = list.filter((c) => c.category === params.category)
-    }
-    if (params?.keyword) {
-      const k = String(params.keyword).toLowerCase()
-      list = list.filter(
-        (c) =>
-          c.title.toLowerCase().includes(k) ||
-          c.author.toLowerCase().includes(k) ||
-          (c.tags || []).some((t) => t.toLowerCase().includes(k)),
-      )
-    }
-    return { list, total: list.length }
-  },
-})
-
-registerRoute('GET /columns/detail', {
-  params: { id: ['string', true] },
-  handler: ({ params } = {}) => {
-    const c = MOCK.columns.find((x) => x.id === params.id)
-    if (!c) throw new Error('专栏不存在')
-    /* 模拟文章列表 */
-    const articles = Array.from({ length: Math.min(8, c.articles_count) }, (_, i) => ({
-      id: `${c.id}-art-${i + 1}`,
-      title: i === 0 ? c.latest_title : `${c.latest_title} · 番外 ${i}`,
-      published_at: new Date(Date.now() - i * 7 * 86400_000).toISOString().slice(0, 10),
-      reading_minutes: 6 + (i * 3) % 12,
-      likes: Math.round(50 + (i * 37) % 380),
-    }))
-    return { ...c, articles }
-  },
-})
-
-/* 订阅/取消订阅专栏 */
-registerRoute('POST /columns/subscribe', {
-  body: { id: ['string', true] },
-  handler: ({ body } = {}) => {
-    const c = MOCK.columns.find((x) => x.id === body.id)
-    if (!c) throw new Error('专栏不存在')
-    c.subscribers = (c.subscribers || 0) + 1
-    return { id: body.id, subscribed: true, subscribers: c.subscribers }
-  },
-})
-registerRoute('POST /columns/unsubscribe', {
-  body: { id: ['string', true] },
-  handler: ({ body } = {}) => {
-    const c = MOCK.columns.find((x) => x.id === body.id)
-    if (!c) throw new Error('专栏不存在')
-    c.subscribers = Math.max(0, (c.subscribers || 0) - 1)
-    return { id: body.id, subscribed: false, subscribers: c.subscribers }
-  },
-})
-
-/* 批量订阅(订阅整个分类时使用) */
-registerRoute('POST /columns/batch-subscribe', {
-  body: { ids: ['array', true] },
-  handler: ({ body } = {}) => {
-    const ids = body.ids || []
-    const results = []
-    for (const id of ids) {
-      const c = MOCK.columns.find((x) => x.id === id)
-      if (c) {
-        c.subscribers = (c.subscribers || 0) + 1
-        results.push({ id, ok: true, subscribers: c.subscribers })
-      } else {
-        results.push({ id, ok: false, error: '专栏不存在' })
-      }
-    }
-    return { results, count: results.filter((r) => r.ok).length }
-  },
-})
-
-/* 设置订阅偏好(通知/频率) */
-registerRoute('POST /columns/prefs', {
-  body: {
-    id:        ['string',  true],
-    notify:    ['boolean', false],
-    frequency: ['string',  false],
-  },
-  handler: ({ body } = {}) => {
-    const c = MOCK.columns.find((x) => x.id === body.id)
-    if (!c) throw new Error('专栏不存在')
-    return {
-      id: body.id,
-      notify: body.notify !== false,
-      frequency: body.frequency || 'realtime',
-    }
-  },
-})
-
-/* 获取已订阅专栏的最新文章聚合(供"我的订阅 / 近期更新"使用) */
-registerRoute('GET /columns/recent', {
-  params: {
-    limit:   ['number',  false],
-    sort:    ['string',  false], // latest | popular
-  },
-  handler: ({ params } = {}) => {
-    const idsParam = (() => {
-      try {
-        const raw = (typeof window !== 'undefined' && window.location) || null
-        /* axios 传数组到 query 时, 框架会自动拼成 ids[]=… 我们直接信任 params */
-        return params?.ids
-      } catch { return null }
-    })()
-    const idList = Array.isArray(idsParam) ? idsParam : []
-    const idSet = new Set(idList)
-    const limit = params?.limit || 20
-    const sort = params?.sort || 'latest'
-    const items = []
-    for (const c of MOCK.columns) {
-      if (idSet.size && !idSet.has(c.id)) continue
-      const articleCount = Math.min(3, c.articles_count || 1)
-      for (let i = 0; i < articleCount; i++) {
-        const ts = new Date(Date.now() - i * 7 * 86400_000).getTime()
-        items.push({
-          id: `${c.id}-art-${i + 1}`,
-          column_id: c.id,
-          column_title: c.title,
-          author: c.author,
-          author_title: c.author_title,
-          cover_color: c.cover_color,
-          title: i === 0 ? c.latest_title : `${c.latest_title} · 番外 ${i}`,
-          published_at: new Date(ts).toISOString(),
-          reading_minutes: 6 + (i * 3) % 12,
-          likes: Math.round(50 + (i * 37) % 380),
-        })
-      }
-    }
-    items.sort((a, b) => {
-      if (sort === 'popular') return (b.likes || 0) - (a.likes || 0)
-      return new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-    })
-    return { items: items.slice(0, limit), total: items.length }
-  },
-})
-
-/* 文章详情(完整页) - 配合 /columns/article/:id 路由 */
-registerRoute('GET /columns/article-detail', {
-  params: { id: ['string', true] },
-  handler: ({ params } = {}) => {
-    const articleId = String(params.id)
-    /* 解析 column_id:约定为 ${column_id}-art-${n+1} */
-    const m = articleId.match(/^(col-\d+)-art-(\d+)$/)
-    const columnId = m ? m[1] : null
-    const seq = m ? parseInt(m[2], 10) : 1
-    const col = columnId ? MOCK.columns.find((x) => x.id === columnId) : null
-    if (!col) throw new Error('文章不存在')
-    /* 构造基础元数据 */
-    const base = {
-      id: articleId,
-      column_id: col.id,
-      column_title: col.title,
-      category: col.category,
-      author: col.author,
-      author_title: col.author_title,
-      cover_color: col.cover_color,
-      column_tags: col.tags || [],
-      published_at: new Date(Date.now() - (seq - 1) * 7 * 86400_000).toISOString(),
-      reading_minutes: 6 + (seq * 3) % 12,
-      likes: Math.round(50 + (seq * 37) % 380),
-      views: 1200 + (seq * 233) % 6000,
-    }
-    /* 内容池(摘要+分节) */
-    const content = MOCK.buildArticleContent(articleId, col.id)
-    /* 关联阅读:同专栏的其他 2-3 篇文章 */
-    const relatedIds = [2, 3].map((n) => `${col.id}-art-${seq + n}`)
-    const related = relatedIds.map((rid) => {
-      const c2 = MOCK.buildArticleContent(rid, col.id)
-      return {
-        id: rid,
-        title: c2.title,
-        reading_minutes: 6 + ((seq + 1) * 3) % 12,
-        summary: c2.summary,
-      }
-    })
-    return { ...base, ...content, related }
-  },
-})
-
-/* 专栏文章列表(供 /columns/:id 详情页使用) */
-registerRoute('GET /columns/:id/articles', {
-  params: { id: ['string', true], limit: ['number', false] },
-  handler: ({ params } = {}) => {
-    const id = String(params.id)
-    const col = MOCK.columns.find((c) => c.id === id)
-    if (!col) throw new Error('专栏不存在')
-    const limit = Math.min(Math.max(parseInt(params.limit, 10) || 20, 1), 100)
-    return MOCK.buildArticleList(id, limit)
-  },
-})
+/* 注:专栏订阅(Columns)模块已下线(2026-07),以下 API 全部移除:
+ *   GET  /columns/list, GET /columns/detail, GET /columns/:id/articles
+ *   GET  /columns/article-detail, GET  /columns/recent
+ *   POST /columns/subscribe, POST /columns/unsubscribe
+ *   POST /columns/batch-subscribe, POST /columns/prefs
+ *  详见文件顶部注释。
+ */
 
 /* ============================================================
  * 导出给视图层使用的方法
+ * 注:智能体相关方法(listAgents / getAgentCategories / getAgentDetail)已下线
+ * 注:专栏订阅相关方法(listColumns / getColumnDetail / subscribeColumn /
+ *    unsubscribeColumn / batchSubscribeColumns / setColumnPrefs /
+ *    getRecentArticles / getArticleDetail / getColumnArticles)已下线
  * ============================================================ */
-export const listAgents       = (params) => http.get('/agents/list', { params })
-export const getAgentCategories = ()    => http.get('/agents/categories')
-export const getAgentDetail   = (id)    => http.get('/agents/detail', { params: { id } })
 export const listSkills       = (params) => http.get('/skills/list', { params })
 export const getSkillDetail   = (id)    => http.get('/skills/detail', { params: { id } })
 export const listKnowledgeBases = (params) => http.get('/knowledge-bases/list', { params })
@@ -985,12 +725,3 @@ export const deleteDocument         = (id)    => http.delete('/documents', { par
 export const searchDocuments        = (params) => http.get('/documents/search', { params })
 export const getDocumentVersions    = (id)    => http.get('/documents/versions', { params: { id } })
 export const setDocumentShare       = (body) => http.post('/documents/share', body)
-export const listColumns        = (params) => http.get('/columns/list', { params })
-export const getColumnDetail    = (id)    => http.get('/columns/detail', { params: { id } })
-export const subscribeColumn    = (id)    => http.post('/columns/subscribe', { id })
-export const unsubscribeColumn  = (id)    => http.post('/columns/unsubscribe', { id })
-export const batchSubscribeColumns = (ids) => http.post('/columns/batch-subscribe', { ids })
-export const setColumnPrefs     = (body)  => http.post('/columns/prefs', body)
-export const getRecentArticles  = (params)=> http.get('/columns/recent', { params })
-export const getArticleDetail   = (id)    => http.get('/columns/article-detail', { params: { id } })
-export const getColumnArticles  = (id, limit) => http.get(`/columns/${id}/articles`, { params: { limit } })

@@ -268,42 +268,17 @@ const breadcrumbTrail = computed(() => {
     return [{ id: 'workbench', label: '工作台', clickable: false }]
   }
   // 0) 特殊处理:知识库文档管理 (KbDocuments 路由)
-  //    归到 智能中心 → 知识库 → 个人知识库 → 文档管理
-  if (name === 'kbdocuments' || path.startsWith('personal-kb/')) {
+  //    归到 智能中心 → 知识库 → 文档管理
+  //    注:原"个人知识库"层级已合并到"知识库"导航(2026-07),面包屑只保留两级
+  if (name === 'kbdocuments' || path.startsWith('knowledge/') && path !== 'knowledge') {
     return [
       { id: 'smart-center', label: '智能中心',  clickable: true },
       { id: 'knowledge',    label: '知识库',    clickable: true },
-      { id: 'personal-kb',  label: '个人知识库', clickable: true },
       { id: 'kb-docs',      label: '文档管理',  clickable: false },
     ]
   }
-  // 0.5) 特殊处理:专栏详情 (ColumnDetail 路由)
-  //    归到 智能中心 → 知识库 → 专栏订阅 → 专栏详情
-  //    注意: /columns/:id 需与 /columns(市场)/columns/article/:id 区分
-  if (
-    name === 'columndetail' ||
-    (path.startsWith('columns/') &&
-     !path.startsWith('columns/article/') &&
-     path !== 'columns')
-  ) {
-    return [
-      { id: 'smart-center', label: '智能中心', clickable: true },
-      { id: 'knowledge',    label: '知识库',   clickable: true },
-      { id: 'columns',      label: '专栏订阅', clickable: true },
-      { id: 'column',       label: '专栏详情', clickable: false },
-    ]
-  }
-  // 0.6) 特殊处理:专栏文章详情 (ColumnArticle 路由)
-  //    归到 智能中心 → 知识库 → 专栏订阅 → 文章详情
-  if (name === 'columnarticle' || path.startsWith('columns/article/')) {
-    return [
-      { id: 'smart-center', label: '智能中心', clickable: true },
-      { id: 'knowledge',    label: '知识库',   clickable: true },
-      { id: 'columns',      label: '专栏订阅', clickable: true },
-      { id: 'article',      label: '文章详情', clickable: false },
-    ]
-  }
-  // 1) 优先匹配三级孙项(智能中心 → 知识库 → 个人知识库/专栏订阅)
+  // 注:专栏订阅(ColumnDetail / ColumnArticle)面包屑已下线(2026-07)
+  // 1) 优先匹配二级子项(智能中心 → 技能/知识库)
   for (const parent of MOCK.nav) {
     if (!Array.isArray(parent.children)) continue
     for (const child of parent.children) {

@@ -14,7 +14,7 @@
           <b>{{ formatNum(totalUsage) }}</b><span>累计调用</span>
         </div>
         <div class="stat-card">
-          <b>{{ totalLinked }}</b><span>智能体关联</span>
+          <b>{{ totalLinked }}</b><span>员工关联</span>
         </div>
         <div class="stat-card">
           <b>{{ draftCount }}</b><span>待发布</span>
@@ -256,10 +256,10 @@
               <b>{{ formatNum(detail.usage_count) }}</b><span>累计调用</span>
             </div>
             <div class="kpi-mini">
-              <b>{{ detail.agents_count }}</b><span>关联智能体</span>
+              <b>{{ detail.employees_count ?? 0 }}</b><span>关联员工</span>
             </div>
             <div class="kpi-mini">
-              <b>{{ Math.round(detail.usage_count / Math.max(detail.agents_count, 1)) }}</b><span>人均调用</span>
+              <b>{{ Math.round(detail.usage_count / Math.max(detail.employees_count || 1, 1)) }}</b><span>人均调用</span>
             </div>
             <div class="kpi-mini">
               <b>{{ trendPeak(detail.trend) }}</b><span>单日峰值</span>
@@ -284,22 +284,22 @@
         </section>
 
         <section class="skill-detail__section">
-          <h5>关联智能体 · {{ detail.linkedAgents?.length || 0 }}</h5>
-          <div v-if="detail.linkedAgents?.length" class="skill-detail__agents">
+          <h5>关联员工 · {{ detail.linkedEmployees?.length || 0 }}</h5>
+          <div v-if="detail.linkedEmployees?.length" class="skill-detail__employees">
             <div
-              v-for="a in detail.linkedAgents"
-              :key="a.id"
-              class="agent-mini"
-              :style="{ borderLeftColor: a.color_theme }"
+              v-for="e in detail.linkedEmployees"
+              :key="e.id"
+              class="employee-mini"
+              :style="{ borderLeftColor: e.color || 'var(--accent)' }"
             >
-              <div class="agent-mini__name">{{ a.name }}</div>
-              <div class="agent-mini__meta">
-                <span>{{ catName(a.category) }}</span>
-                <span>· 调用 {{ formatNum(a.usage_count) }}</span>
+              <div class="employee-mini__name">{{ e.name }}</div>
+              <div class="employee-mini__meta">
+                <span>{{ e.domain || '—' }}</span>
+                <span>· 调用 {{ formatNum(e.usage) }}</span>
               </div>
             </div>
           </div>
-          <p v-else class="skill-detail__empty">暂无关联智能体</p>
+          <p v-else class="skill-detail__empty">暂无关联员工</p>
         </section>
 
         <footer class="skill-detail__foot">
@@ -308,7 +308,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 5v14M5 12h14"/>
             </svg>
-            绑定到智能体
+            绑定到员工
           </button>
         </footer>
       </div>
@@ -399,7 +399,7 @@ const toast = useToastStore()
 const filter = reactive({ category: 'all', keyword: '', sort: '', pageNo: 1, pageSize: 24 })
 
 const totalUsage = computed(() => list.value.reduce((s, x) => s + (x.usage_count || 0), 0))
-const totalLinked = computed(() => list.value.reduce((s, x) => s + (x.agents_count || 0), 0))
+const totalLinked = computed(() => list.value.reduce((s, x) => s + (x.employees_count || 0), 0))
 const draftCount = computed(() => list.value.filter((x) => x.status === 'draft').length)
 
 function applyFilter(arr) {
@@ -415,7 +415,7 @@ function applyFilter(arr) {
     )
   }
   if (filter.sort === 'usage')  res = [...res].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
-  if (filter.sort === 'agents') res = [...res].sort((a, b) => (b.agents_count || 0) - (a.agents_count || 0))
+  if (filter.sort === 'employees') res = [...res].sort((a, b) => (b.employees_count || 0) - (a.employees_count || 0))
   if (filter.sort === 'newest') res = [...res].sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
   return res
 }
@@ -944,14 +944,14 @@ onUnmounted(() => { entering.value = false })
   font-size: 10px; color: var(--ink-3);
 }
 
-.skill-detail__agents { display: grid; gap: 8px; }
-.agent-mini {
+.skill-detail__employees { display: grid; gap: 8px; }
+.employee-mini {
   padding: 10px 14px; border-radius: 8px;
   background: var(--surface-2); border: 1px solid var(--line);
   border-left-width: 3px;
 }
-.agent-mini__name { font-size: 13px; font-weight: 500; }
-.agent-mini__meta { font-size: 11px; color: var(--ink-3); margin-top: 2px; display: flex; gap: 4px; }
+.employee-mini__name { font-size: 13px; font-weight: 500; }
+.employee-mini__meta { font-size: 11px; color: var(--ink-3); margin-top: 2px; display: flex; gap: 4px; }
 
 .skill-detail__foot {
   display: flex; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line-2);

@@ -1,9 +1,9 @@
 <template>
   <div class="page page-kb" :class="{ 'view-enter': entering }">
-    <!-- ============== HERO (对齐 agents-hero / skills-hero) ============== -->
+    <!-- ============== HERO (对齐 skills-hero) ============== -->
     <section class="kb-hero">
       <div class="kb-hero__text">
-        <h3>个人知识库</h3>
+        <h3>知识库</h3>
         <p>沉淀个人专业知识资产,支持协议规范、案例复盘、培训教材等结构化文档管理。</p>
       </div>
       <div class="kb-hero__stats">
@@ -22,7 +22,7 @@
       </div>
     </section>
 
-    <!-- ============== TOOLBAR (对齐 agents-toolbar) ============== -->
+    <!-- ============== TOOLBAR ============== -->
     <div class="kb-toolbar">
       <div class="kb-toolbar__left">
         <div class="seg-toggle">
@@ -167,7 +167,7 @@
     <!-- ============== EMPTY ============== -->
     <div v-else-if="!filteredKbs.length && !loading" class="kb-empty">
       <div class="kb-empty__icon">📚</div>
-      <h4>{{ filter.keyword ? '没有匹配的知识库' : '还没有个人知识库' }}</h4>
+      <h4>{{ filter.keyword ? '没有匹配的知识库' : '还没有知识库' }}</h4>
       <p>{{ filter.keyword ? '尝试调整关键词或切换可见性' : '点击「新建知识库」开始沉淀你的专业知识资产' }}</p>
       <div class="kb-empty__actions">
         <button v-if="filter.keyword" class="btn btn--ghost btn--sm" @click="filter.keyword = ''; reload()">重置筛选</button>
@@ -241,6 +241,7 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'Knowledge' })
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -306,7 +307,9 @@ function countByVisibility(v) {
 
 const router = useRouter()
 function openKbDocs(kb) {
-  router.push(`/personal-kb/${kb.id}/documents`)
+  /* 注:路由已迁到 /knowledge(2026-07 个人知识库整体并入知识库),
+   *   文档管理子页同步从 /personal-kb/:id/documents 迁到 /knowledge/:id/documents */
+  router.push(`/knowledge/${kb.id}/documents`)
 }
 
 async function reload() {

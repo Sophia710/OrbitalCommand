@@ -11,11 +11,13 @@ const DAY = 24 * HOUR
 
 /* ============ 导航 ============ */
 // 与 prototype copy 的 static index.html 一致：
-//   主导航 = 工作台 / 数字员工(展开含 员工广场/我的员工/创建员工) / 智能中心(展开含 智能体/技能/知识库) / 任务监控
+//   主导航 = 工作台 / 数字员工(展开含 员工广场/我的员工/创建员工) / 智能中心(展开含 技能/知识库) / 任务监控
 //   管理导航 = 审核中心 / 审计日志
 //   注:原"指挥中心"已合并到"工作台"根路径,直接渲染原 Dashboard 页面内容
 //   注:"系统设置"入口已从侧边栏移除(避免与顶部用户菜单重复);
 //        仍可通过 /settings 路由访问,详见 router/index.js 与 TopBar 用户下拉菜单
+//   注:"智能体"模块已整体移除(2026-06 全量下线),侧边栏"智能中心"分组现仅含 技能 / 知识库
+//   注:"专栏订阅"已下线(2026-07 全量下线),"知识库"由原"个人知识库"承接,直接挂在"智能中心"下
 const NAV = [
   { id: 'workbench',     label: '工作台',     icon: 'Odometer',       desc: '总览与监控',          count: null, group: 'main' },
   {
@@ -35,24 +37,12 @@ const NAV = [
     id: 'smart-center',
     label: '智能中心',
     icon: 'Sparkles',
-    desc: '智能体 / 技能 / 知识库',
+    desc: '技能 / 知识库',
     count: null,
     group: 'main',
     children: [
-      { id: 'agents',        label: '智能体',     icon: 'Cpu',         desc: '发现与订阅智能体',    count: 12 },
-      { id: 'skills',        label: '技能',       icon: 'MagicStick',  desc: '管理可复用技能',      count: 24 },
-      {
-        id: 'knowledge',
-        label: '知识库',
-        icon: 'Folder',
-        desc: '个人知识库 / 专栏订阅',
-        count: null,
-        // 嵌套子分组:个人知识库 + 专栏订阅
-        children: [
-          { id: 'personal-kb',  label: '个人知识库', icon: 'Document',  desc: '管理个人文档',        count: 18 },
-          { id: 'columns',      label: '专栏订阅',   icon: 'Reading',   desc: '订阅专家专栏',        count: 7  },
-        ],
-      },
+      { id: 'skills',    label: '技能',   icon: 'MagicStick',  desc: '管理可复用技能',      count: 24 },
+      { id: 'knowledge', label: '知识库', icon: 'Folder',      desc: '个人知识库 · 文档管理', count: 18 },
     ],
   },
   { id: 'tasks',         label: '任务监控',   icon: 'Connection',     desc: '全链路任务追踪',      count: 5,    live: true, group: 'main' },
@@ -87,13 +77,14 @@ const ALARMS = [
 ]
 
 const TASKS = [
-  { id: 'T-2026-0617-01', title: '信关站链路异常诊断',   agent: '链路诊断员 · 卫通7号',  progress: 78,  status: 'run',  time: '00:42' },
-  { id: 'T-2026-0617-02', title: 'Ka 频段用户终端干扰分析', agent: '干扰分析员 · 卫通12号', progress: 100, status: 'done', time: '02:14' },
-  { id: 'T-2026-0617-03', title: '载荷健康度周报生成',   agent: '全链路编排员 · 中央',   progress: 100, status: 'done', time: '01:36' },
-  { id: 'T-2026-0617-04', title: 'TTC 测控计划自动编排', agent: '全链路编排员 · 中央',   progress: 45,  status: 'run',  time: '01:08' },
-  { id: 'T-2026-0617-05', title: '测控站天线校准参数核查', agent: '测控分析员',           progress: 12,  status: 'run',  time: '00:24' },
-  { id: 'T-2026-0617-06', title: '星上软件在轨升级策略评估', agent: '载荷分析员',         progress: 0,   status: 'wait', time: '等待资源' },
-  { id: 'T-2026-0617-07', title: '用户终端 OTA 灰度发布', agent: '终端管理助理',           progress: 100, status: 'fail', time: '回滚' },
+  // 字段: id / title / agent(执行人 → 数字员工名占位,旧版为智能体) / progress / status / time
+  { id: 'T-2026-0617-01', title: '信关站链路异常诊断',     agent: '链路诊断员',     progress: 78,  status: 'run',  time: '00:42' },
+  { id: 'T-2026-0617-02', title: 'Ka 频段用户终端干扰分析', agent: '全链路编排员',   progress: 100, status: 'done', time: '02:14' },
+  { id: 'T-2026-0617-03', title: '载荷健康度周报生成',     agent: '全链路编排员',   progress: 100, status: 'done', time: '01:36' },
+  { id: 'T-2026-0617-04', title: 'TTC 测控计划自动编排',   agent: '全链路编排员',   progress: 45,  status: 'run',  time: '01:08' },
+  { id: 'T-2026-0617-05', title: '测控站天线校准参数核查', agent: '链路诊断员',     progress: 12,  status: 'run',  time: '00:24' },
+  { id: 'T-2026-0617-06', title: '星上软件在轨升级策略评估', agent: '载荷分析员',   progress: 0,   status: 'wait', time: '等待资源' },
+  { id: 'T-2026-0617-07', title: '用户终端 OTA 灰度发布', agent: '终端管理助理',   progress: 100, status: 'fail', time: '回滚' },
 ]
 
 const TRAFFIC_HOURS = Array.from({ length: 24 }, (_, i) => `${D(i)}:00`)
@@ -167,99 +158,11 @@ const KB = [
 ]
 
 /* ============================================================
- * 智能中心 · 智能体数据集
- * ------------------------------------------------------------
- *  与后端 agents 表 schema 对齐：
- *    id / name / description / category / icon / color_theme / status
- *    + 使用量 usage_count(从 conversations 关联聚合)
- *    + 关联技能 tags
- *  category 取值: terminal | network | payload | e2e
- *  status   取值: active | maintenance | draft
- * ============================================================ */
-const AGENT_CATEGORY_LABELS = {
-  terminal: '用户终端智能化测试',
-  network:  '星地网络智能化测试',
-  payload:  '卫星载荷智能化测试',
-  e2e:      '全链路智能化验收与运维测试',
-}
-const AGENT_CATEGORY_KEYS = ['terminal', 'network', 'payload', 'e2e']
-const AGENT_TEMPLATES = [
-  /* ============ 分类1 · 用户终端智能化测试 ============ */
-  { category: 'terminal', icon: 'developer_mode', color_theme: '#10b981', tags: ['终端验证', '协议一致性', '接口兼容'] },
-  { category: 'terminal', icon: 'phone_iphone',   color_theme: '#22c55e', tags: ['手机直连', '波束跟踪', '功耗分析'] },
-  { category: 'terminal', icon: 'groups',         color_theme: '#84cc16', tags: ['大规模接入', '信令分析', '拥塞控制'] },
-  /* ============ 分类2 · 星地网络智能化测试 ============ */
-  { category: 'network',  icon: 'cloud_sync',     color_theme: '#3b82f6', tags: ['链路损伤', '雨衰', '多普勒'] },
-  { category: 'network',  icon: 'hub',            color_theme: '#0ea5e9', tags: ['星座组网', '拓扑', '路由切换'] },
-  { category: 'network',  icon: 'speed',          color_theme: '#06b6d4', tags: ['网络性能', '吞吐', '时延'] },
-  /* ============ 分类3 · 卫星载荷智能化测试 ============ */
-  { category: 'payload',  icon: 'psychology',     color_theme: '#a855f7', tags: ['AI 推理', '模型更新', '在轨算法'] },
-  { category: 'payload',  icon: 'settings_input_antenna', color_theme: '#8b5cf6', tags: ['射频', '基带', '调制解调'] },
-  { category: 'payload',  icon: 'thermostat',     color_theme: '#ec4899', tags: ['极端环境', '辐射', '热真空'] },
-  /* ============ 分类4 · 全链路智能化验收与运维测试 ============ */
-  { category: 'e2e',      icon: 'health_and_safety', color_theme: '#f43f5e', tags: ['在轨运维', '健康度', '故障预测'] },
-  { category: 'e2e',      icon: 'shield',         color_theme: '#ef4444', tags: ['安全攻防', '红蓝对抗', '漏洞修复'] },
-  { category: 'e2e',      icon: 'task_alt',       color_theme: '#f97316', tags: ['端到端验收', '业务贯通', '回归基线'] },
-]
-const AGENT_NAME_POOL = {
-  terminal: ['终端', 'CPE', '模组', 'SIM', '基站', 'IoT', 'OTA'],
-  network:  ['网络', '链路', '星座', '路由', '时频', '频谱', '传输'],
-  payload:  ['AI', '射频', '载荷', '存储', '姿轨控', '能源', '雷达'],
-  e2e:      ['运维', '安全', '验收', '监控', '分析', '应急', '合规'],
-}
-const STATUS_DIST = ['active', 'active', 'active', 'active', 'active', 'active', 'active', 'maintenance', 'draft']
-
-function _buildAgents() {
-  // 5 大分类体系,每个分类固定 3 个用户指定智能体 = 12 个系统内置智能体
-  const base = [
-    /* ============ 分类1 · 用户终端智能化测试 ============ */
-    { id: 'agent-001', category: 'terminal', name: '便携/固定终端功能兼容性测试', description: '覆盖便携式用户终端与固定地面站的协议兼容性、接口一致性及业务功能自动化测试,支持多频段 / 多制式 / 多厂商终端的批量回归验证。' },
-    { id: 'agent-002', category: 'terminal', name: '手机直连卫星终端测试',         description: '针对手机直连卫星场景的终端功能、信号质量、波束跟踪、功耗等全方位智能化测试,支持 3GPP NTN 等制式的自动适配验证。' },
-    { id: 'agent-003', category: 'terminal', name: '终端大规模接入模拟',           description: '模拟海量终端同时接入场景下的信令风暴、资源调度、拥塞控制与切换可靠性压力测试,支持百万级虚拟用户并发。' },
-    /* ============ 分类2 · 星地网络智能化测试 ============ */
-    { id: 'agent-004', category: 'network',  name: '星地链路损伤仿真',            description: '模拟雨衰、大气闪烁、多普勒频移、电离层闪烁等链路损伤条件下的传输可靠性智能评估,支持场景模板化与损伤叠加注入。' },
-    { id: 'agent-005', category: 'network',  name: '星座组网仿真测试',             description: '基于数字孪生技术对低轨星座拓扑动态变化、星间路由切换、时频同步进行全链路仿真验证,支持 Walker / 玫瑰星座等多种构型。' },
-    { id: 'agent-006', category: 'network',  name: '网络性能/压力测试',            description: '对星地融合网络的吞吐量、时延、抖动、丢包等关键指标进行智能化性能基准测试与极限压测,支持 7×24 长稳测试编排。' },
-    /* ============ 分类3 · 卫星载荷智能化测试 ============ */
-    { id: 'agent-007', category: 'payload',  name: 'AI 载荷性能/功能测试',         description: '面向星载 AI 处理器的推理性能、能效比及在轨模型更新功能的自动化测试框架,支持 INT8 / FP16 / FP32 多精度评估。' },
-    { id: 'agent-008', category: 'payload',  name: '射频/基带自动化测试',          description: '覆盖卫星转发器射频特性(EIRP / G/T / 相位噪声)与基带调制解调参数的全自动化测试与异常检测,支持批量执行与回归基线。' },
-    { id: 'agent-009', category: 'payload',  name: '极端环境可靠测试',             description: '模拟空间辐射、热真空、振动、原子氧等极端环境下卫星载荷的功能可靠性与寿命预测测试,支持多因子耦合工况编排。' },
-    /* ============ 分类4 · 全链路智能化验收与运维测试 ============ */
-    { id: 'agent-010', category: 'e2e',      name: '在轨运维与故障预测',           description: '基于遥测大数据的卫星平台 + 载荷 + 链路综合健康度评估、异常根因分析与故障预测性维护,支持 LSTM + 物理模型融合预测。' },
-    { id: 'agent-011', category: 'e2e',      name: '安全与攻击测试',               description: '针对星地链路的窃听、干扰、欺骗等攻击场景进行红蓝对抗演练、安全加固验证与渗透测试,覆盖物理层 / 协议层 / 应用层。' },
-    { id: 'agent-012', category: 'e2e',      name: '端到端业务验收测试',           description: '从用户终端到应用服务器的完整业务链路验收测试,覆盖语音、视频、物联网、宽带接入等多类业务场景的 SLA 验证与回归基线。' },
-  ]
-  // 用 AGENT_TEMPLATES 为每个 base 注入 icon / color / tags,顺序一一对应
-  const tplByCat = {}
-  for (const tpl of AGENT_TEMPLATES) {
-    if (!tplByCat[tpl.category]) tplByCat[tpl.category] = []
-    tplByCat[tpl.category].push(tpl)
-  }
-  const all = base.map((a) => {
-    const tpl = tplByCat[a.category].shift()
-    return { ...a, icon: tpl.icon, color_theme: tpl.color_theme, tags: tpl.tags }
-  })
-  // 注入后端模型中的额外字段(usage_count / publisher / version / createdAt)
-  return all.map((a, i) => ({
-    ...a,
-    status: 'active',
-    publisher: ['AEROS · 旗舰', 'AEROS · 平台', '运控中心', '网络中心', '载荷研究院'][i % 5],
-    version: `${2 + (i % 4)}.${(i * 3) % 10}.${(i * 7) % 10}`,
-    usage_count: Math.round(800 + ((i * 137) % 26000)),
-    rating: (4.5 + ((i * 11) % 50) / 100).toFixed(1) * 1,
-    createdAt: NOW - ((i * 7 + 30) * DAY),
-  }))
-}
-const AGENTS = _buildAgents()
-
-/* ============================================================
  * 智能中心 · 技能数据集
  * ------------------------------------------------------------
- *  技能是从智能体能力中抽象出来的"可复用单元",每个技能可被
- *  多个智能体调用。后端目前未独立建表,这里以独立数据集形式
- *  维护,字段含义与后端 agent.tags + 关联统计一致。
+ *  技能是面向"数字员工"的可复用能力单元,字段与后端 skills 表一致:
  *    id / name / description / category / tags / usage_count /
- *    agents_count / trend (近 7 天调用趋势) / createdAt
+ *    employees_count(原 agents_count,改名为"关联员工数") / trend / createdAt
  * ============================================================ */
 const SKILL_CATEGORIES = {
   office:    { key: 'office',    label: '办公效率', color: '#2563eb' },
@@ -297,6 +200,15 @@ const SKILL_TEMPLATES = [
   { name: '客户分群',      cat: 'marketing', desc: '基于使用行为与画像的客户自动分群与精准触达建议。' },
   { name: '活动文案生成',  cat: 'marketing', desc: '围绕产品特性的多风格营销文案生成,适配多渠道。' },
 ]
+/* 技能分类的标签池(原依赖智能体 AGENT_TEMPLATES,改为本地静态标签池,避免耦合) */
+const SKILL_CATEGORY_TAGS = {
+  office:    ['办公效率', '模板化', '协同'],
+  dev:       ['研发辅助', '代码生成', '调试'],
+  test:      ['测试工具', '回归', '压测'],
+  ops:       ['运维工具', '监控', '告警'],
+  marketing: ['运营工具', '用户分群', '触达'],
+  general:   ['通用', '可组合', '跨域'],
+}
 const SKILLS_FULL = SKILL_TEMPLATES.map((t, i) => {
   const cat = SKILL_CATEGORIES[t.cat]
   return {
@@ -306,8 +218,8 @@ const SKILLS_FULL = SKILL_TEMPLATES.map((t, i) => {
     category: t.cat,
     categoryLabel: cat.label,
     categoryColor: cat.color,
-    tags: AGENT_TEMPLATES.filter((a) => a.category === t.cat || t.cat === 'general').slice(0, 3).map((a) => a.tags[0]).filter(Boolean),
-    agents_count: 2 + (i * 3) % 12,
+    tags: (SKILL_CATEGORY_TAGS[t.cat] || SKILL_CATEGORY_TAGS.general).slice(0, 3),
+    employees_count: 2 + (i * 3) % 12,
     usage_count: Math.round(500 + (i * 211) % 18000),
     trend: Array.from({ length: 7 }, (_, k) => Math.round(60 + Math.sin(k * 0.7 + i) * 22 + ((i * k) % 18))),
     createdAt: NOW - ((i * 11 + 20) * DAY),
@@ -537,250 +449,9 @@ DOCUMENTS.forEach((d) => {
   d.token_count = Math.round(((d.size_bytes || 0) / 4))
 })
 
-/* ============================================================
- * 智能中心 · 专栏订阅数据集
- * ------------------------------------------------------------
- *  专栏 = 专家产出的系列内容,字段语义清晰即可:
- *    id / title / author / author_title / description /
- *    category / subscribers / articles_count / cover_color /
- *    tags / latest_title / latest_at / status
- * ============================================================ */
-const COLUMN_CATEGORIES = {
-  terminal: { key: 'terminal', label: '终端',  color: '#4CAF50' },
-  network:  { key: 'network',  label: '网络',  color: '#2196F3' },
-  payload:  { key: 'payload',  label: '载荷',  color: '#9C27B0' },
-  e2e:      { key: 'e2e',      label: '全链路', color: '#FF5722' },
-  ops:      { key: 'ops',      label: '运维运营', color: '#00BCD4' },
-  ai:       { key: 'ai',       label: 'AI 与算法', color: '#3F51B5' },
-}
-const COLUMNS = [
-  { id: 'col-001', title: '星地链路一席谈',       author: '陈博士', author_title: '通信系统总师',  category: 'network',  description: '从工程视角拆解星地链路的物理层、协议层与运维挑战,每两周更新。', subscribers: 1820, articles_count: 48, cover_color: '#2196F3', tags: ['链路预算', '雨衰', '多普勒'], latest_title: 'Ka波段雨衰建模与实测校准', latest_at: '2026-06-20' },
-  { id: 'col-002', title: '终端协议深潜',         author: '李工',   author_title: '终端协议专家',  category: 'terminal', description: '3GPP NTN / CCSDS / DVB-S2X 协议栈解读与一致性测试经验。',     subscribers: 1342, articles_count: 36, cover_color: '#4CAF50', tags: ['协议一致性', '3GPP', 'OTA'], latest_title: 'R17 NTN 时序对齐机制详解', latest_at: '2026-06-18' },
-  { id: 'col-003', title: '在轨 AI 实验室',       author: '周博士', author_title: '星载 AI 负责人', category: 'ai',       description: '星载 AI 推理、模型更新、能效优化的实战记录。',                 subscribers: 2210, articles_count: 27, cover_color: '#3F51B5', tags: ['AI 推理', '模型更新', '能效比'], latest_title: 'INT8 量化在轨部署的精度回退治理', latest_at: '2026-06-19' },
-  { id: 'col-004', title: '卫星载荷故障录',       author: '王工',   author_title: '载荷可靠性专家', category: 'payload', description: '卫星载荷真实故障案例、复盘与可靠性改进经验。',                subscribers:  987, articles_count: 31, cover_color: '#9C27B0', tags: ['故障复盘', '可靠性', '寿命预测'], latest_title: '电源控制器异常导致载荷下线的处置', latest_at: '2026-06-15' },
-  { id: 'col-005', title: '全链路 SLA 实战',      author: '张工',   author_title: '运维架构师',  category: 'e2e',      description: '端到端 SLA 设计、监控、告警收敛与根因分析的体系化建设。',       subscribers: 1567, articles_count: 22, cover_color: '#FF5722', tags: ['SLA', '告警', '根因'], latest_title: '告警风暴的七步收敛法', latest_at: '2026-06-17' },
-  { id: 'col-006', title: '卫星互联网产品说',     author: '黄 PM',  author_title: '产品总监',    category: 'ops',      description: '面向客户的卫星互联网产品设计、交付与商业化思考。',             subscribers:  726, articles_count: 18, cover_color: '#00BCD4', tags: ['产品', '商业化', '客户成功'], latest_title: 'CPE 设备交付的隐藏成本', latest_at: '2026-06-12' },
-  { id: 'col-007', title: '星座组网随笔',         author: '吴博士', author_title: '星座系统总师', category: 'network',  description: '低轨星座的拓扑、路由、时频同步以及仿真验证经验分享。',         subscribers: 2014, articles_count: 41, cover_color: '#0288D1', tags: ['星座', '路由', '时频同步'], latest_title: 'Walker 星座的相位规划对业务时延的影响', latest_at: '2026-06-21' },
-]
-
-/* ============================================================
- * 智能中心 · 专栏订阅 · 文章内容池
- * ------------------------------------------------------------
- *  文章 = 专栏下的具体内容,字段:
- *    id / column_id / title / author / author_title /
- *    cover_color / category / published_at / reading_minutes /
- *    likes / tags / summary / sections[]
- *  sections 元素 = { heading, paragraph, bullets? }
- *  详情页(ArticleDetail.vue)按此结构渲染
- * ============================================================ */
-const ARTICLES_CONTENT = {
-  'col-001-art-1': {
-    title: 'Ka波段雨衰建模与实测校准',
-    summary: 'Ka 波段雨衰是影响星地链路可用度最关键的因素之一。本文结合近一年的实测数据,给出一种工程可落地的雨衰预测与校准方法,显著降低链路可用度的统计偏差。',
-    sections: [
-      {
-        heading: '一、背景与意义',
-        paragraph: 'Ka 波段(26.5–40 GHz)因其宽带宽、波束窄、可复用性高等优势,已经成为高通量卫星(HTS)的核心工作频段。然而,雨滴对 Ka 波段信号的吸收与散射所导致的雨衰,是星地链路可用度最敏感的扰动源。统计显示,在亚热带湿润气候区,Ka 波段年平均雨衰可达 6–10 dB,瞬时雨衰可超过 20 dB,链路可用度若不补偿将下降到 95% 以下,远低于商用卫星互联网对 99.5% 的可用度要求。',
-        bullets: [
-          '雨衰随雨强、滴谱、温度、海拔的耦合变化复杂,纯经验模型误差大',
-          '链路可用度提升需 4–6 dB 上下行的动态补偿,UPC 算法的精度至关重要',
-          '实测数据稀缺,不同地域的校准参数差异大,无法简单复用通用模型',
-        ],
-      },
-      {
-        heading: '二、关键方法',
-        paragraph: '我们提出 "经验模型 + 实测滚动校准" 的两步法。第一步采用 ITU-R P.618 推荐模型计算基础雨衰;第二步利用信关站近 30 天的实测信标数据,基于最小二乘动态校准模型参数。校准后,平均绝对误差从 1.8 dB 下降到 0.5 dB,链路可用度评估偏差从 ±3.2% 收窄到 ±0.8%。',
-        bullets: [
-          '采用滚动窗口 30 天,平衡数据量与季节敏感性',
-          '结合雨量计与信标数据,提高校准样本的代表性',
-          '实现自动闭环:每日定时校准 + 异常告警,无需人工干预',
-        ],
-      },
-      {
-        heading: '三、实测效果与总结',
-        paragraph: '在某 7 个信关站、4 个气候带的近一年部署中,本方法将雨衰预测的均方根误差从 2.1 dB 降低到 0.6 dB,链路可用度评估的偏差下降到 0.8% 以内,显著优于纯经验模型。本方法也已封装为标准 API,可在 NOC 侧对接链路预算与 SLA 监控平台。',
-        bullets: [
-          '7 信关站 / 4 气候带 / 12 个月验证',
-          '雨衰预测 RMSE 从 2.1 → 0.6 dB',
-          '链路可用度评估偏差从 ±3.2% → ±0.8%',
-        ],
-      },
-    ],
-    tags: ['链路预算', '雨衰', 'Ka 波段', '可用度'],
-  },
-  'col-002-art-1': {
-    title: 'R17 NTN 时序对齐机制详解',
-    summary: 'R17 NTN 引入了一套完整的时序对齐机制,用于解决卫星高速运动带来的多普勒与传播时延变化问题。本文从协议栈、时序窗到实测一致性逐层拆解。',
-    sections: [
-      {
-        heading: '一、问题背景',
-        paragraph: 'NTN(Non-Terrestrial Network)在 3GPP R17 正式成为研究项。LEO 卫星以约 7.5 km/s 速度运动,导致终端接收的下行频率与帧起始时刻在毫秒级持续变化,传统 LTE/NR 的时序假设被打破。R17 通过系统信息广播 SIB、网络控制的定时提前(Timing Advance)与 K_offset 三件套,把时序对齐的精度约束到 symbol 级。',
-        bullets: [
-          '多普勒频偏最大可达 ±24 kHz(LEO @ Ka)',
-          '传播时延变化率可达 ±50 ns/s,常规 TA 调整不适用',
-          'R17 引入的 K_offset 配合 SIB19/31,完成传播时延预补偿',
-        ],
-      },
-      {
-        heading: '二、协议细节',
-        paragraph: '在 R17 中,UE 启动时先通过 SIB19/31 读取当前服务波束的星历(ephemeris)与 K_offset,自行完成 "下行帧到达时刻 + 上行 TA" 的联合推算,实现免随机接入的预同步。',
-        bullets: [
-          'SIB19 广播波束的星历与 K_offset 索引',
-          'UE 侧基于 SIB+ephemeris 计算自身位置与时延',
-          'K_mac 反馈给 gNB 后,接入时延从秒级降低到 200 ms 以内',
-        ],
-      },
-      {
-        heading: '三、实测一致性',
-        paragraph: '我们在 5 款主流芯片平台 + 2 款 NTN 终端上做了一致性测试,R17 时序对齐机制在 LEO 场景下平均接入时延 184 ms,优于 3GPP 目标 300 ms;多普勒频偏校正误差 < 0.3 ppm,满足 R17 协议一致性要求。',
-        bullets: [
-          '5 款芯片 / 2 款终端一致性测试',
-          '平均接入时延 184 ms(优于 3GPP 300 ms 目标)',
-          '多普勒校正误差 < 0.3 ppm',
-        ],
-      },
-    ],
-    tags: ['3GPP', 'NTN', '时序', 'R17'],
-  },
-  'col-003-art-1': {
-    title: 'INT8 量化在轨部署的精度回退治理',
-    summary: 'INT8 量化是把大型模型搬上星的最常见手段,但精度回退是拦路虎。本文给出在轨量化 + 端云协同的治理思路。',
-    sections: [
-      {
-        heading: '一、量化损失溯源',
-        paragraph: 'INT8 量化在大多数视觉任务上损失 < 1%,但在遥感目标检测、长尾样本等敏感任务上损失可达 4–8%。根本原因在于:激活分布的离群值(outlier)对量化粒度的破坏,以及敏感通道未做混合精度保护。',
-        bullets: [
-          '激活 outliers 集中在 < 1% 的通道',
-          '未做 per-channel 缩放,粒度太粗',
-          '敏感通道未做 FP16 旁路',
-        ],
-      },
-      {
-        heading: '二、端云协同治理',
-        paragraph: '我们采用 "在轨 INT8 + 地面 FP16 影子模型" 的端云协同策略:星上 INT8 推理,关键 case 的特征回传地面影子模型做对照与回灌校准。回退 case 触发后自动生成新的 PTQ 校准集,定期 OTA 推送。',
-        bullets: [
-          '在轨 INT8 推理,满足实时性 + 功耗预算',
-          '地面 FP16 影子模型,提供精度基准',
-          '回退 case 自动回灌,周级 OTA 校准',
-        ],
-      },
-      {
-        heading: '三、效果与展望',
-        paragraph: '本方法已在 3 颗 LEO 卫星上持续运行 8 个月,平均精度回退从 4.3% 下降到 0.7%,任务成功率从 91% 提升到 99.2%。下一步我们将探索 INT4 + 稀疏化,把星载模型的算力需求再压低 30%。',
-        bullets: [
-          '3 颗 LEO 卫星 / 8 个月验证',
-          '平均精度回退 4.3% → 0.7%',
-          '任务成功率 91% → 99.2%',
-        ],
-      },
-    ],
-    tags: ['AI 推理', 'INT8', '量化', '端云协同'],
-  },
-}
-
-/* 对未配置 content 的文章,使用通用占位内容(避免 NPE,保持视觉一致) */
-function buildArticleContent(articleId, columnId) {
-  if (ARTICLES_CONTENT[articleId]) return ARTICLES_CONTENT[articleId]
-  const col = COLUMNS.find((c) => c.id === columnId) || {}
-  return {
-    title: col.latest_title || '暂无标题',
-    summary: `本文聚焦「${col.title || '该专栏'}」的核心议题,系统梳理工程实践中的关键决策与典型陷阱,供工程团队参考。`,
-    sections: [
-      {
-        heading: '一、背景与意义',
-        paragraph: `${col.title || '本专栏'}在工程实践中长期面临若干共性挑战。本文将逐一拆解,帮助团队在系统设计阶段规避常见误区。`,
-        bullets: ['问题一:多源数据融合的一致性', '问题二:在轨资源约束下的实时性', '问题三:可观测性与可回溯性'],
-      },
-      {
-        heading: '二、关键方法',
-        paragraph: '我们提出 "分层治理 + 闭环验证" 的方法论,把复杂的端到端流程拆解为可独立验证的子模块,通过统一的契约打通模块间的协作。',
-        bullets: ['模块契约 + 自动化回归', '影子流量 + 灰度发布', '统一的可观测与告警策略'],
-      },
-      {
-        heading: '三、总结与展望',
-        paragraph: '本方法在某大型系统中已经验证,核心指标提升 20–40%。后续我们将继续在工具链与生态层面做深做实,把方法论沉淀为可复用的平台能力。',
-        bullets: ['核心指标 +20–40%', '工具链 / 平台化沉淀', '下一步:跨域扩展'],
-      },
-    ],
-    tags: (col.tags || ['实战', '工程', '体系化']).slice(0, 4),
-  }
-}
-
-/**
- * 派生某专栏的文章列表(供 /columns/:id/articles 使用)
- * 1) 优先从 ARTICLES_CONTENT 抽取该 column 下的精校文章
- * 2) 不足部分用 buildArticleContent 兜底补齐,序列号递增
- * 3) 按 published_at 倒序
- *
- * @param {string} columnId
- * @param {number} [limit=20]
- * @returns {Array<{ id, title, summary, published_at, reading_minutes, column_id, column_title, cover_color, author, author_title, category, tags, likes, views }>}
- */
-function buildArticleList(columnId, limit = 20) {
-  const col = COLUMNS.find((c) => c.id === columnId)
-  if (!col) return []
-
-  /* 第 1 步:从内容池抽取该专栏文章 */
-  const collected = []
-  const prefix = `${columnId}-art-`
-  for (const [key, content] of Object.entries(ARTICLES_CONTENT)) {
-    if (key.startsWith(prefix)) {
-      const seq = parseInt(key.slice(prefix.length), 10) || 1
-      collected.push({
-        id: key,
-        seq,
-        title: content.title,
-        summary: content.summary,
-        sections: content.sections,
-        tags: content.tags || col.tags,
-      })
-    }
-  }
-  collected.sort((a, b) => a.seq - b.seq)
-
-  /* 第 2 步:兜底补齐到 limit */
-  while (collected.length < limit) {
-    const seq = collected.length + 1
-    const id = `${columnId}-art-${seq}`
-    /* 避免与已有 id 冲突 */
-    if (collected.some((x) => x.id === id)) break
-    const content = buildArticleContent(id, columnId)
-    collected.push({
-      id,
-      seq,
-      title: content.title,
-      summary: content.summary,
-      sections: content.sections,
-      tags: content.tags || col.tags,
-    })
-  }
-
-  /* 第 3 步:组装展示字段 + 倒序 */
-  const now = Date.now()
-  return collected
-    .map((a, idx) => {
-      const stepDays = 7 + (a.seq - 1) * 3
-      return {
-        id: a.id,
-        title: a.title,
-        summary: a.summary,
-        published_at: new Date(now - (a.seq - 1) * stepDays * 24 * 60 * 60 * 1000).toISOString(),
-        reading_minutes: 6 + ((a.seq * 3) % 12),
-        column_id: col.id,
-        column_title: col.title,
-        cover_color: col.cover_color,
-        author: col.author,
-        author_title: col.author_title,
-        category: col.category,
-        tags: a.tags || col.tags,
-        likes: 50 + ((a.seq * 37) % 380),
-        views: 1200 + ((a.seq * 233) % 6000),
-        /* 内部使用,render 时不展示 */
-        _seq: a.seq,
-      }
-    })
-    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
-}
+/* 注:专栏订阅(Columns / 专栏文章 / buildArticleContent / buildArticleList)已下线(2026-07 全量下线),
+ *   详见 router/index.js 与 smart-center.js 路由与 API 同步清理。
+ *   原"个人知识库"功能已整体迁移到"知识库"导航,路由 /knowledge 直接渲染原 PersonalKb.vue 内容。 */
 
 /* ============ 文件树 ============ */
 const FILES = [
@@ -872,9 +543,9 @@ export const MOCK = {
   settings: SETTINGS,
 
   // 智能中心
-  agentCategoryLabels: AGENT_CATEGORY_LABELS,
-  agentCategoryKeys:   AGENT_CATEGORY_KEYS,
-  agents:    AGENTS,
+  // 注:智能体模块已下线,以下不再导出 agentCategoryLabels / agentCategoryKeys / agents
+  // 注:专栏订阅已下线,以下不再导出 columnCategories / columns / articlesContent /
+  //     buildArticleContent / buildArticleList
   skillCategories: SKILL_CATEGORIES,
   skillsFull: SKILLS_FULL,
   knowledgeBases: KNOWLEDGE_BASES,
@@ -884,11 +555,6 @@ export const MOCK = {
   documentShares:   DOCUMENT_SHARES,
   sharedLinks:      SHARED_LINKS,
   visibilityLabels: VISIBILITY_LABELS,
-  columnCategories: COLUMN_CATEGORIES,
-  columns: COLUMNS,
-  articlesContent: ARTICLES_CONTENT,
-  buildArticleContent,
-  buildArticleList,
 }
 
 export default MOCK

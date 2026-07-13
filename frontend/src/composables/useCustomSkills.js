@@ -22,7 +22,7 @@ import { ref, watch } from 'vue'
  *   trigger_cmd  : string
  *   trend        : number[] (创建时为 7 个 0)
  *   usage_count  : 0
- *   agents_count : 0
+ *   employees_count : 0
  *   version      : '1.0.0'
  *   status       : 'active'
  *   created_at   : number
@@ -78,7 +78,7 @@ export function useCustomSkills() {
       trigger_cmd: draft.trigger_cmd || '',
       trend: [0, 0, 0, 0, 0, 0, 0],
       usage_count: 0,
-      agents_count: 0,
+      employees_count: 0,
       version: '1.0.0',
       status: 'active',
       created_at: Date.now(),

@@ -13,14 +13,14 @@ import { MOCK } from '@/api/mock-data'
  *   3. scrollBehavior 记忆浏览位置
  */
 // 路由组件映射（懒加载），仅在触发预加载时通过动态 import() 解析
+// 注:智能体模块已下线,移除 /agents 路由
+// 注:专栏订阅已下线(2026-07),移除 /columns /columns/:id /columns/article/:id
+// 注:原 /personal-kb 已迁移到 /knowledge(2026-07 个人知识库整体并入知识库),
+//    旧路径保留重定向以兼容历史书签
 const routeImports = {
-  '/agents':         () => import('@/views/Agents.vue'),
   '/skills':         () => import('@/views/Skills.vue'),
-  '/personal-kb':    () => import('@/views/PersonalKb.vue'),
-  '/personal-kb/documents/:id': () => import('@/views/KbDocuments.vue'),
-  '/columns':        () => import('@/views/Columns.vue'),
-  '/columns/article/:id': () => import('@/views/ArticleDetail.vue'),
-  '/columns/:id':    () => import('@/views/ColumnDetail.vue'),
+  '/knowledge':      () => import('@/views/PersonalKb.vue'),
+  '/knowledge/documents/:id': () => import('@/views/KbDocuments.vue'),
   '/plaza':          () => import('@/views/Plaza.vue'),
   '/my-employees':   () => import('@/views/MyEmployees.vue'),
   '/create':         () => import('@/views/Create.vue'),
@@ -36,6 +36,12 @@ const routes = [
   { path: '/', redirect: '/workbench' },
   // 旧路径兼容:早期版本使用 /dashboard,统一重定向到 /workbench
   { path: '/dashboard', redirect: '/workbench' },
+  // 旧路径兼容:原 /personal-kb 已迁到 /knowledge,旧路径重定向到新路径
+  { path: '/personal-kb', redirect: '/knowledge' },
+  { path: '/personal-kb/:pathMatch(.*)*', redirect: (to) => `/knowledge/${to.params.pathMatch || ''}`.replace(/\/$/, '') || '/knowledge' },
+  // 旧路径兼容:专栏订阅已下线,相关路径重定向到知识库首页
+  { path: '/columns', redirect: '/knowledge' },
+  { path: '/columns/:pathMatch(.*)*', redirect: '/knowledge' },
 
   {
     path: '/workbench',
@@ -43,48 +49,27 @@ const routes = [
     component: () => import('@/views/Dashboard.vue'),
     meta: { title: '工作台', group: 'main', icon: 'Odometer' },
   },
-  {
-    path: '/agents',
-    name: 'Agents',
-    component: () => import('@/views/Agents.vue'),
-    meta: { title: '智能体', group: 'main', icon: 'Cpu' },
-  },
+  // 注:智能体路由(/agents)已下线,详见 mock-data.js 导航注释
   {
     path: '/skills',
     name: 'Skills',
     component: () => import('@/views/Skills.vue'),
     meta: { title: '技能', group: 'main', icon: 'MagicStick' },
   },
+  // 原"个人知识库"已整体迁入"知识库"导航
   {
-    path: '/personal-kb',
-    name: 'PersonalKb',
+    path: '/knowledge',
+    name: 'Knowledge',
     component: () => import('@/views/PersonalKb.vue'),
-    meta: { title: '个人知识库', group: 'main', icon: 'Document' },
+    meta: { title: '知识库', group: 'main', icon: 'Folder' },
   },
   {
-    path: '/personal-kb/:id/documents',
+    path: '/knowledge/:id/documents',
     name: 'KbDocuments',
     component: () => import('@/views/KbDocuments.vue'),
-    meta: { title: '知识库文档', group: 'main', icon: 'Document', hidden: true },
+    meta: { title: '知识库文档', group: 'main', icon: 'Folder', hidden: true },
   },
-  {
-    path: '/columns',
-    name: 'Columns',
-    component: () => import('@/views/Columns.vue'),
-    meta: { title: '专栏订阅', group: 'main', icon: 'Reading' },
-  },
-  {
-    path: '/columns/article/:id',
-    name: 'ColumnArticle',
-    component: () => import('@/views/ArticleDetail.vue'),
-    meta: { title: '文章详情', group: 'main', icon: 'Reading', hidden: true },
-  },
-  {
-    path: '/columns/:id',
-    name: 'ColumnDetail',
-    component: () => import('@/views/ColumnDetail.vue'),
-    meta: { title: '专栏详情', group: 'main', icon: 'Reading', hidden: true },
-  },
+  // 注:专栏订阅路由(/columns /columns/:id /columns/article/:id)已下线(2026-07)
   {
     path: '/plaza',
     name: 'Plaza',

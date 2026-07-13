@@ -528,7 +528,7 @@ async function loadKb() {
 
 function goBack() {
   if (window.history.length > 1) router.back()
-  else router.push('/personal-kb')
+  else router.push('/knowledge')
 }
 
 function onKey(e) {
@@ -554,7 +554,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* ============== HERO (对齐 skills-hero / agents-hero) ============== */
+/* ============== HERO (对齐 skills-hero) ============== */
 .kdocs-hero {
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
   padding: 22px 28px; margin-bottom: 18px;

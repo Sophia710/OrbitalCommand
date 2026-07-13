@@ -45,7 +45,7 @@ function buildInitialMessages(emp) {
  * 包含：
  *   - user  : 用户消息
  *   - bot   : 普通 bot 消息
- *   - process_card : 智能体执行步骤卡（带 10/10 进度、计时、收起展开）
+ *   - process_card : 数字员工执行步骤卡（带 10/10 进度、计时、收起展开）
  *   - markdown : 输出结果（含代码块、列表、标题等富文本）
  */
 const MOCK_DIALOG = [
@@ -58,7 +58,7 @@ const MOCK_DIALOG = [
   {
     id: newId(),
     who: 'process_card',
-    title: '智能体执行完成',
+    title: '数字员工执行完成',
     progress: '10/10',
     steps: [
       { id: 'p1s1', icon: 'think', text: '正在解析任务需求…', time: '0.6s', status: 'done' },
@@ -109,8 +109,8 @@ const MOCK_DIALOG = [
   {
     id: newId(),
     who: 'process_card',
-    title: '智能体执行完成',
-    progress: '10/10',
+    title: '数字员工执行完成',
+    progress: '8/8',
     steps: [
       { id: 'p2s1', icon: 'think', text: '正在理解重构需求…',                  time: '0.4s', status: 'done', detail: '把 FSPL 计算与 CSV 处理拆分，加入 numpy 向量化与 tqdm 进度条。' },
       { id: 'p2s2', icon: 'read',  text: '已完成文件读取: /workspace/scripts/fspl_calc.py',  time: '0.1s', status: 'done' },
