@@ -54,6 +54,7 @@
       <!-- 通知（带 badge） -->
       <div class="notif-wrap">
         <button
+          ref="notifBtn"
           class="iconbtn iconbtn--badge"
           :class="{ active: notifOpen }"
           aria-label="通知"
@@ -66,7 +67,7 @@
           <span v-if="notifCount" class="iconbtn__badge">{{ notifCount }}</span>
         </button>
         <transition name="popover">
-          <div v-if="notifOpen" class="notif-panel" @click.stop>
+          <div v-if="notifOpen" ref="notifPanelEl" class="notif-panel" @click.stop>
             <div class="notif-head">
               <span>通知</span>
               <button v-if="userStore.notifications.length" class="link-btn" @click="userStore.clearNotifications()">全部已读</button>
@@ -99,6 +100,7 @@
       <!-- 用户 chip 包裹：触发下拉菜单 -->
       <div class="user-chip-wrap">
         <div
+          ref="userChipEl"
           class="user-chip"
           :class="{ active: userMenuOpen }"
           role="button"
@@ -124,6 +126,7 @@
         <transition name="popover">
           <div
             v-if="userMenuOpen"
+            ref="userMenuEl"
             class="user-menu"
             role="menu"
             @click.stop
@@ -162,6 +165,24 @@
               <span class="user-menu__value">{{ appStore.theme === 'dark' ? '深色' : '浅色' }}</span>
             </button>
 
+            <!-- 设置 -->
+            <button
+              id="settingsBtn"
+              class="user-menu__item"
+              aria-label="设置"
+              title="系统设置"
+              role="menuitem"
+              @click="goSettings"
+            >
+              <span class="user-menu__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.16.66.43.86.77s.27.71.24 1.09c.6.16 1.07.66 1.27 1.27.2.6.13 1.27-.24 1.82l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z"/>
+                </svg>
+              </span>
+              <span class="user-menu__label">系统设置</span>
+            </button>
+
             <div class="user-menu__divider" />
 
             <!-- 退出 -->
@@ -186,13 +207,6 @@
         </transition>
       </div>
     </div>
-
-    <!-- 弹层遮罩：任一弹层打开时显示，点击关闭全部 -->
-    <div
-      v-if="notifOpen || userMenuOpen"
-      class="popover-mask"
-      @click="closeAllPopovers"
-    />
   </header>
 </template>
 
@@ -202,6 +216,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
+import { useClickOutside } from '@/composables/useClickOutside'
 import { MOCK } from '@/api/mock-data'
 
 const emit = defineEmits(['toggleSidebar', 'toggleDrawer'])
@@ -215,6 +230,24 @@ const query = ref(appStore.topbarQuery || '')
 const notifOpen = ref(false)
 const userMenuOpen = ref(false)
 const switching = ref(false)
+
+// 浮层 DOM 引用（用于 click-outside 检测）
+const notifBtn = ref(null)
+const notifPanelEl = ref(null)
+const userChipEl = ref(null)
+const userMenuEl = ref(null)
+
+/* 点击外部关闭：
+ *   - 通知面板：忽略触发按钮 #helpBtn 旁的通知按钮
+ *   - 用户菜单：忽略触发器 user-chip（让 chip 自身的 @click 负责切换）
+ * 通过 useClickOutside 在 document 顶层监听 mousedown / touchstart，
+ * 对动态生成的元素（v-for 渲染的 notif-item）也照样有效。 */
+useClickOutside(notifPanelEl, () => (notifOpen.value = false), [notifBtn])
+useClickOutside(userMenuEl, () => (userMenuOpen.value = false), [userChipEl])
+
+/* 互斥：一个浮层打开时自动收起另一个（保持原 popover-mask 的行为，关闭逻辑已改由 useClickOutside 处理） */
+watch(notifOpen, (v) => { if (v) userMenuOpen.value = false })
+watch(userMenuOpen, (v) => { if (v) notifOpen.value = false })
 
 watch(query, (v) => appStore.setTopbarQuery(v))
 function onSearch(v) { appStore.setTopbarQuery(v) }
@@ -357,19 +390,21 @@ function onLogout() {
   toast.success('已退出（演示）')
 }
 
+function goSettings() {
+  router.push('/settings')
+}
+
 function onKey(e) {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault()
     const el = document.querySelector('.topbar__search input')
     el?.focus()
   }
-  if (e.key === 'Escape') closeAllPopovers()
-}
-
-/* 关闭所有顶部弹层（通知 / 用户菜单），用于点遮罩或按 Esc */
-function closeAllPopovers() {
-  notifOpen.value = false
-  userMenuOpen.value = false
+  if (e.key === 'Escape') {
+    // 浮层外部点击已交由 useClickOutside 处理;此处仅响应 Esc 键统一收起
+    notifOpen.value = false
+    userMenuOpen.value = false
+  }
 }
 onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
@@ -688,12 +723,6 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
   font-family: var(--font-mono);
   margin-top: 4px;
 }
-.popover-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: transparent;
-}
 
 .link-btn {
   display: inline-flex;
@@ -714,7 +743,7 @@ html[data-theme="dark"]  #themeToggle .icon-sun  { display: none; }
 .link-btn:hover { color: var(--accent); background: var(--accent-soft); }
 
 /* ============== USER MENU (popover) ============== */
-/* 复用 .popover-* 过渡，复用 .popover-mask 关闭逻辑 */
+/* 复用 .popover-* 过渡；外部点击关闭由 useClickOutside 统一处理 */
 .user-menu {
   position: absolute;
   right: 0;

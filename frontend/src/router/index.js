@@ -29,6 +29,7 @@ const routeImports = {
   '/files':          () => import('@/views/Files.vue'),
   '/review':         () => import('@/views/Review.vue'),
   '/audit':          () => import('@/views/Audit.vue'),
+  '/settings':       () => import('@/views/Settings.vue'),
 }
 
 const routes = [
@@ -131,6 +132,12 @@ const routes = [
     name: 'Audit',
     component: () => import('@/views/Audit.vue'),
     meta: { title: '审计日志', group: 'aux', icon: 'Document' },
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/Settings.vue'),
+    meta: { title: '系统设置', group: 'admin', icon: 'Setting' },
   },
   {
     path: '/:pathMatch(.*)*',

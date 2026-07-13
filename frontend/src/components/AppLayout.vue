@@ -21,7 +21,7 @@
         </div>
         <div class="brand__text" :class="{ 'is-collapsed-hide': appStore.sidebarCollapsed }">
           <div class="brand__title">OrbitalCommand</div>
-          <div class="brand__subtitle">卫星互联网 · 数字员工</div>
+          <div class="brand__subtitle">卫星互联网 · 智能专家</div>
         </div>
       </div>
 
@@ -237,6 +237,8 @@ const activeRoute = computed(() => {
       }
     }
   }
+  // /settings 已从侧边栏移除,此处返回 'settings' 不会匹配任何导航项,避免误高亮"工作台"
+  if (name === 'settings' || path === 'settings') return 'settings'
   return name === 'myemployees' ? 'my-employees' : 'workbench'
 })
 
