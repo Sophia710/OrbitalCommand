@@ -839,7 +839,7 @@
         btn('保存草稿', 'ghost', () => toast('已保存草稿', 'info'), ICON('folder')),
         btn('试运行', 'ghost', () => toast('已启动试运行（示例）', 'info'), ICON('activity')),
         btn('保存', 'primary', () => toast('配置已保存', 'info'), ICON('check')),
-        btn('发布到广场', 'primary', () => toast('已提交发布审核', 'info'), ICON('send'))));
+        btn('发布', 'primary', () => toast('已提交发布审核', 'info'), ICON('send'))));
 
     // ===== 工作区 =====
     const ws = el('div', { class: 'create-ws' });

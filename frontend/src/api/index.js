@@ -52,13 +52,21 @@ http.interceptors.response.use(
     const body = res.data
     if (body && typeof body === 'object' && 'code' in body) {
       if (body.code === 0) return body.data
-      ElMessage.error(body.message || '请求失败')
+      /* silent 选项：用于后台静默校验，不弹错误提示（避免误提示干扰用户）
+       *  - 典型场景：bootstrap 期间后台调用 /auth/me 刷新用户信息
+       *  - 此时失败不应弹 toast，更不应清空本地会话 */
+      if (!res.config?.silent) {
+        ElMessage.error(body.message || '请求失败')
+      }
       return Promise.reject(new Error(body.message || 'mock fail'))
     }
     return body
   },
   (err) => {
-    ElMessage.error(err?.message || '网络异常')
+    /* 同上：silent 模式下不弹网络异常提示 */
+    if (!err?.config?.silent) {
+      ElMessage.error(err?.message || '网络异常')
+    }
     return Promise.reject(err)
   },
 )

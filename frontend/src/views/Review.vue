@@ -2,11 +2,12 @@
   <div class="page page-review" :class="{ 'view-enter': entering }">
     <header class="page-head">
       <div>
+        <!-- 注:头部 nav__count 徽标与 page-sub 中的 "条待审" 文案已于 2026-07 永久移除 -->
         <h2 class="page-title">审核中心</h2>
-        <p class="page-sub">对员工上架、知识库更新、变更进行合规审核 · {{ list.length }} 条待审</p>
+        <p class="page-sub">对员工上架、知识库更新、变更进行合规审核</p>
       </div>
       <div class="page-head__actions">
-        <button class="btn btn--ghost">策略配置</button>
+        <!-- 注:"策略配置" 按钮已于 2026-07 永久移除(避免与 /settings 路由入口重复) -->
         <button class="btn btn--primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
@@ -44,7 +45,7 @@
             <div class="review-card__name">{{ r.employeeName }}</div>
             <div class="review-card__sub">提交人：{{ r.submitter }} · {{ r.domain }} · {{ r.submittedAt }}</div>
           </div>
-          <span class="chip" :class="priorityCls(r.priority)">{{ r.priority }} · {{ priorityLabel(r.priority) }}</span>
+          <!-- 注:优先级(priority)字段已于 2026-07 永久移除,此处不再渲染优先级 chip -->
           <span class="chip status-chip" :class="`is-${r.status}`">
             <i class="dot"></i>
             {{ statusLabel(r.status) }}
@@ -90,12 +91,9 @@ const loading = ref(false)
 function statusLabel(s) {
   return { pending: '待审核', approved: '已通过', rejected: '已驳回' }[s] || s
 }
-function priorityLabel(p) {
-  return { P1: '紧急', P2: '高优', P3: '普通' }[p] || '普通'
-}
-function priorityCls(p) {
-  return `is-priority-${p}`
-}
+
+/* 注:priorityLabel / priorityCls 已于 2026-07 永久移除,优先级字段下线后不再保留 */
+/* 注:pendingCount / loadPendingCount 已于 2026-07 永久移除(头部徽标与 page-sub 文案均已下线) */
 
 async function load() {
   loading.value = true
@@ -141,6 +139,8 @@ onMounted(() => {
 .page-title { margin: 0; font-size: 20px; font-weight: 600; color: var(--ink); font-family: var(--font-display); }
 .page-sub { margin: 4px 0 0; color: var(--ink-3); font-size: 12.5px; }
 .page-head__actions { display: inline-flex; gap: 8px; }
+
+/* 注:.page-title-row / .nav__count.nav__count--review / .is-zero 样式已于 2026-07 永久移除(徽标下线) */
 
 /* ============== REVIEW LIST ============== */
 .review-list { display: flex; flex-direction: column; gap: 12px; }
@@ -201,10 +201,7 @@ onMounted(() => {
   border: 1px solid var(--line);
   letter-spacing: 0.02em;
 }
-.chip.is-priority-P1 { background: rgba(248, 113, 113, 0.12); color: var(--danger); border-color: rgba(248, 113, 113, 0.3); }
-.chip.is-priority-P2 { background: rgba(251, 191, 36, 0.12); color: #fbbf24;     border-color: rgba(251, 191, 36, 0.3); }
-.chip.is-priority-P3 { background: var(--surface-2); color: var(--ink-3); }
-
+/* 注:.chip.is-priority-P1/P2/P3 样式已于 2026-07 永久移除,优先级字段下线后不再保留 */
 .status-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 4px currentColor; }
 .status-chip.is-pending  { background: rgba(251, 191, 36, 0.12); color: #fbbf24;     border-color: rgba(251, 191, 36, 0.3); }
 .status-chip.is-approved { background: rgba(74, 222, 128, 0.12); color: var(--ok);   border-color: rgba(74, 222, 128, 0.3); }

@@ -488,7 +488,7 @@
       el('div', { class: 'hero__text' },
         el('div', { class: 'hero__eyebrow' }, el('span', { class: 'hero__eyebrow-dot' }), 'OrbitalCommand · Live Status'),
         el('h2', { class: 'hero__title', html: '欢迎回来，<span class="hero__name">' + D.USER.name + '</span>' }),
-        el('p', { class: 'hero__desc' }, '当前星座系统运行平稳，138 颗在轨卫星健康度 96.4%。今天有 17 条告警待处理，' +
+        el('p', { class: 'hero__desc' }, '当前系统运行平稳，138 个数字员工正常在线。今天有 17 条通知信息待处理，' +
                 '1,248 个任务已完成，平均响应 4.2 分钟 — 比昨日提升 8.4%。'),
         el('div', { class: 'hero__actions' },
           btn('打开员工广场', 'primary', () => navigate('plaza'), ICON('grid')),
@@ -839,7 +839,7 @@
         btn('保存草稿', 'ghost', () => toast('已保存草稿', 'info'), ICON('folder')),
         btn('试运行', 'ghost', () => toast('已启动试运行（示例）', 'info'), ICON('activity')),
         btn('保存', 'primary', () => toast('配置已保存', 'info'), ICON('check')),
-        btn('发布到广场', 'primary', () => toast('已提交发布审核', 'info'), ICON('send'))));
+        btn('发布', 'primary', () => toast('已提交发布审核', 'info'), ICON('send'))));
 
     // ===== 工作区 =====
     const ws = el('div', { class: 'create-ws' });
@@ -1611,7 +1611,7 @@
 
   /* ============== REVIEW ============== */
   function renderReview(root) {
-    root.appendChild(pageHead('审核中心', '对员工上架、知识库更新、变更进行合规审核 · ' + D.REVIEWS.length + ' 条待审。',
+    root.appendChild(pageHead('审核中心', '对员工上架、知识库更新、变更进行合规审核',
       [btn('批量通过', 'primary', null, ICON('check')), btn('策略配置', 'ghost', null, ICON('settings'))]));
 
     const list = el('div', { class: 'review-list' });

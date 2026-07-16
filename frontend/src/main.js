@@ -14,6 +14,9 @@ import './styles/base.css'
 import './styles/animations.css'
 import './styles/element-overrides.css'
 
+// 引入认证模块（副作用：注册 mock 路由 POST /auth/login 等）
+import './api/auth'
+
 const app = createApp(App)
 const pinia = createPinia()
 

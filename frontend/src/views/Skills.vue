@@ -8,7 +8,7 @@
       </div>
       <div class="skills-hero__stats">
         <div class="stat-card">
-          <b>{{ list.length }}</b><span>在售技能</span>
+          <b>{{ list.length }}</b><span>在线技能</span>
         </div>
         <div class="stat-card">
           <b>{{ formatNum(totalUsage) }}</b><span>累计调用</span>
@@ -32,7 +32,7 @@
             :class="{ 'is-active': typeTab === 'builtin' }"
             @click="setTypeTab('builtin')"
           >
-            内置技能
+            技能市场
             <span v-if="builtinList.length" class="skills-type-tab__count">{{ builtinList.length }}</span>
           </button>
           <button
@@ -41,7 +41,7 @@
             @click="setTypeTab('custom')"
           >
             我的技能
-            <span v-if="customSkills.length" class="skills-type-tab__count">{{ customSkills.length }}</span>
+            <span v-if="mySkillsTotal" class="skills-type-tab__count">{{ mySkillsTotal }}</span>
           </button>
         </div>
 
@@ -217,8 +217,17 @@
       direction="rtl"
       size="540px"
       :with-header="false"
+      :modal="true"
+      :modal-class="'skill-detail-modal'"
+      :append-to-body="true"
+      :lock-scroll="true"
+      :destroy-on-close="false"
     >
-      <div v-if="detail" class="skill-detail">
+      <div
+        v-if="detail"
+        class="skill-detail"
+        @click="onDetailClick"
+      >
         <header class="skill-detail__head">
           <button class="skill-detail__close" @click="drawerOpen = false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -244,63 +253,65 @@
           </div>
         </header>
 
-        <section class="skill-detail__section">
-          <h5>技能描述</h5>
-          <p>{{ detail.description }}</p>
-        </section>
+        <div class="skill-detail__body">
+          <section class="skill-detail__section">
+            <h5>技能描述</h5>
+            <p>{{ detail.description }}</p>
+          </section>
 
-        <section class="skill-detail__section">
-          <h5>关键指标</h5>
-          <div class="skill-detail__kpis">
-            <div class="kpi-mini">
-              <b>{{ formatNum(detail.usage_count) }}</b><span>累计调用</span>
+          <section class="skill-detail__section">
+            <h5>关键指标</h5>
+            <div class="skill-detail__kpis">
+              <div class="kpi-mini">
+                <b>{{ formatNum(detail.usage_count) }}</b><span>累计调用</span>
+              </div>
+              <div class="kpi-mini">
+                <b>{{ detail.employees_count ?? 0 }}</b><span>关联员工</span>
+              </div>
+              <div class="kpi-mini">
+                <b>{{ Math.round(detail.usage_count / Math.max(detail.employees_count || 1, 1)) }}</b><span>人均调用</span>
+              </div>
+              <div class="kpi-mini">
+                <b>{{ trendPeak(detail.trend) }}</b><span>单日峰值</span>
+              </div>
             </div>
-            <div class="kpi-mini">
-              <b>{{ detail.employees_count ?? 0 }}</b><span>关联员工</span>
-            </div>
-            <div class="kpi-mini">
-              <b>{{ Math.round(detail.usage_count / Math.max(detail.employees_count || 1, 1)) }}</b><span>人均调用</span>
-            </div>
-            <div class="kpi-mini">
-              <b>{{ trendPeak(detail.trend) }}</b><span>单日峰值</span>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="skill-detail__section">
-          <h5>7 日调用趋势</h5>
-          <div class="skill-detail__trend">
-            <div class="trend-bars">
+          <section class="skill-detail__section">
+            <h5>7 日调用趋势</h5>
+            <div class="skill-detail__trend">
+              <div class="trend-bars">
+                <div
+                  v-for="(v, i) in detail.trend"
+                  :key="i"
+                  class="trend-bars__item"
+                  :style="{ height: trendHeight(v, detail.trend) + '%' }"
+                >
+                  <span class="trend-bars__label">{{ v }}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="skill-detail__section">
+            <h5>关联员工 · {{ detail.linkedEmployees?.length || 0 }}</h5>
+            <div v-if="detail.linkedEmployees?.length" class="skill-detail__employees">
               <div
-                v-for="(v, i) in detail.trend"
-                :key="i"
-                class="trend-bars__item"
-                :style="{ height: trendHeight(v, detail.trend) + '%' }"
+                v-for="e in detail.linkedEmployees"
+                :key="e.id"
+                class="employee-mini"
+                :style="{ borderLeftColor: e.color || 'var(--accent)' }"
               >
-                <span class="trend-bars__label">{{ v }}</span>
+                <div class="employee-mini__name">{{ e.name }}</div>
+                <div class="employee-mini__meta">
+                  <span>{{ e.domain || '—' }}</span>
+                  <span>· 调用 {{ formatNum(e.usage) }}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section class="skill-detail__section">
-          <h5>关联员工 · {{ detail.linkedEmployees?.length || 0 }}</h5>
-          <div v-if="detail.linkedEmployees?.length" class="skill-detail__employees">
-            <div
-              v-for="e in detail.linkedEmployees"
-              :key="e.id"
-              class="employee-mini"
-              :style="{ borderLeftColor: e.color || 'var(--accent)' }"
-            >
-              <div class="employee-mini__name">{{ e.name }}</div>
-              <div class="employee-mini__meta">
-                <span>{{ e.domain || '—' }}</span>
-                <span>· 调用 {{ formatNum(e.usage) }}</span>
-              </div>
-            </div>
-          </div>
-          <p v-else class="skill-detail__empty">暂无关联员工</p>
-        </section>
+            <p v-else class="skill-detail__empty">暂无关联员工</p>
+          </section>
+        </div>
 
         <footer class="skill-detail__foot">
           <button class="btn btn--ghost" @click="drawerOpen = false">关闭</button>
@@ -474,6 +485,20 @@ async function open(s) {
   detail.value = s
 }
 
+/* 抽屉内部交互元素点击 → 自动关闭抽屉
+ * 通过事件委托识别 button / a / [role=button] 等可交互元素
+ * 注意:点击内容区空白 / 滚动 / 文本选择不会触发关闭 */
+function onDetailClick(e) {
+  const target = e.target
+  if (!(target instanceof Element)) return
+  const interactive = target.closest('button, a, [role="button"], .employee-mini, .skill-detail__empty')
+  if (!interactive) return
+  /* 关闭按钮的 @click 自身已设 drawerOpen=false,
+   * 这里用微任务延后执行,确保其原生逻辑先跑 */
+  if (interactive.classList.contains('skill-detail__close')) return
+  Promise.resolve().then(() => { drawerOpen.value = false })
+}
+
 /* ============== "我的技能" 收藏(添加)管理 ============== */
 /* 用 localStorage 记录用户从内置市场添加的技能 id */
 const MINE_KEY = 'user:skills:mine:v1'
@@ -487,6 +512,21 @@ window.addEventListener('storage', (e) => { if (e.key === MINE_KEY) mySkillSet.v
 function isInMySkills(id) {
   return Boolean(mySkillSet.value[id])
 }
+
+/* 我的技能总数量 = 用户从系统预设技能库中添加的技能数 + 用户自定义创建的技能数
+ *  - 通过 computed 自动响应 mySkillSet（添加/移除内置技能）和 customSkills（创建/删除自定义技能）的变化
+ *  - 确保去重：基于 skill id 统计，避免同一技能被重复计数
+ *  - 实时更新：Vue 3 响应式系统自动追踪依赖，任何变更立即触发重算与 UI 更新 */
+const mySkillsTotal = computed(() => {
+  const mineSet = mySkillSet.value || {}
+  /* 已添加的内置技能 id 集合（用于去重） */
+  const addedBuiltinIds = new Set(Object.keys(mineSet))
+  /* 自定义技能 id 集合（用于去重） */
+  const customIds = new Set((customSkills.value || []).map((s) => s?.id).filter(Boolean))
+  /* 合并去重后的总数：两个集合的并集大小 */
+  const totalIds = new Set([...addedBuiltinIds, ...customIds])
+  return totalIds.size
+})
 function addToMine(s) {
   if (isInMySkills(s.id)) return
   mySkillSet.value = { ...mySkillSet.value, [s.id]: Date.now() }
@@ -880,11 +920,37 @@ onUnmounted(() => { entering.value = false })
 .skill-card__del svg { width: 14px; height: 14px; }
 
 /* ============== DRAWER ============== */
-.skill-detail { padding: 0 24px 24px; }
+/* 根容器:与抽屉本体等高,垂直 flex 布局 */
+.skill-detail {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px;
+  box-sizing: border-box;
+  /* 宽度由父级 .el-drawer__body 控制,此处不修改 */
+  width: 100%;
+}
+/* 头部:固定,不随内容滚动 */
 .skill-detail__head {
   position: relative; display: flex; align-items: center; gap: 14px;
   padding: 28px 20px 20px; margin: 0 -24px 18px;
   border-bottom: 1px solid var(--line-2);
+  flex-shrink: 0;
+}
+/* 中部主体:唯一滚动区域,高度自适应视口 */
+.skill-detail__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+/* 底部:固定,不随内容滚动 */
+.skill-detail__foot {
+  flex-shrink: 0;
 }
 .skill-detail__close {
   position: absolute; top: 14px; right: 14px;

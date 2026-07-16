@@ -22,7 +22,7 @@ window.MOCK = (function () {
     { id: 'data',       label: '数据应用',   icon: 'chart',      desc: '看板与自助分析',       count: null, group: 'main' },
     { id: 'tasks',      label: '任务监控',   icon: 'activity',   desc: '全链路任务追踪',       count: 5,    group: 'aux' },
     { id: 'files',      label: '文件中心',   icon: 'folder',     desc: '上传与管理文档',       count: null, group: 'aux' },
-    { id: 'review',     label: '审核中心',   icon: 'check',      desc: '员工上架审核',         count: 3,    group: 'aux' },
+    { id: 'review',     label: '审核中心',   icon: 'check',      desc: '员工上架审核',         count: 1,    group: 'aux' },
     { id: 'audit',      label: '审计日志',   icon: 'shield',     desc: '操作与合规审计',       count: null, group: 'aux' },
     { id: 'settings',   label: '系统设置',   icon: 'settings',   desc: '主题、模型与权限',     count: null, group: 'admin' },
   ];

@@ -28,8 +28,8 @@ const NAV = [
     count: null,
     group: 'main',
     children: [
-      { id: 'plaza',        label: '员工广场', icon: 'UserFilled', desc: '发现与订阅数字员工', count: 48 },
-      { id: 'my-employees', label: '我的员工', icon: 'Star',       desc: '管理我创建/订阅的',  count: 12 },
+      { id: 'plaza',        label: '员工广场', icon: 'UserFilled', desc: '发现与订阅数字员工', count: 10 },
+      { id: 'my-employees', label: '我的员工', icon: 'Star',       desc: '管理我创建/订阅的',  count: 5 },
       { id: 'create',       label: '创建员工', icon: 'MagicStick', desc: '零代码自定义',       count: null },
     ],
   },
@@ -46,7 +46,7 @@ const NAV = [
     ],
   },
   { id: 'tasks',         label: '任务监控',   icon: 'Connection',     desc: '全链路任务追踪',      count: 5,    live: true, group: 'main' },
-  { id: 'review',        label: '审核中心',   icon: 'Stamp',          desc: '员工上架审核',        count: 3,    group: 'aux' },
+  { id: 'review',        label: '审核中心',   icon: 'Stamp',          desc: '员工上架审核',        count: 1,    group: 'aux' },
   { id: 'audit',         label: '审计日志',   icon: 'Document',       desc: '操作与合规审计',      count: null, group: 'aux' },
 ]
 
@@ -469,10 +469,11 @@ const FILES = [
 ]
 
 /* ============ 审核中心 ============ */
+// 注:priority(优先级)字段已于 2026-07 永久移除,审核项不再携带优先级
 const REVIEWS = [
-  { id: 'r1', employeeName: 'Ka 频段专项测试员',  submitter: '张工',  domain: '终端',     priority: 'P1', status: 'pending',  submittedAt: '2026-06-15 10:24', description: '针对 Ka 频段链路的专项测试与链路预算计算' },
-  { id: 'r3', employeeName: '异常告警收敛员',    submitter: '王研',  domain: '运维',     priority: 'P3', status: 'rejected', submittedAt: '2026-06-14 09:11', description: '告警风暴智能聚类、抑制与自动派单' },
-  { id: 'r4', employeeName: '链路质量评估员',    submitter: '赵博',  domain: '星地网络', priority: 'P2', status: 'approved', submittedAt: '2026-06-13 16:40', description: '链路质量评估与趋势预测' },
+  { id: 'r1', employeeName: 'Ka 频段专项测试员',  submitter: '张工',  domain: '终端',     status: 'pending',  submittedAt: '2026-06-15 10:24', description: '针对 Ka 频段链路的专项测试与链路预算计算' },
+  { id: 'r3', employeeName: '异常告警收敛员',    submitter: '王研',  domain: '运维',     status: 'rejected', submittedAt: '2026-06-14 09:11', description: '告警风暴智能聚类、抑制与自动派单' },
+  { id: 'r4', employeeName: '链路质量评估员',    submitter: '赵组',  domain: '星地网络', status: 'approved', submittedAt: '2026-06-13 16:40', description: '链路质量评估与趋势预测' },
 ]
 
 /* ============ 审计日志 ============ */
@@ -509,9 +510,43 @@ const SETTINGS = {
   ],
 }
 
+/* ============================================================
+ * 导航计数动态解析
+ * ------------------------------------------------------------
+ * 将 NAV 数组中的硬编码 count 替换为来自实际数据的真实数量,
+ * 避免 badge 数字与列表数据不一致(2026-07 修复:技能 badge 由 24 修正为 26)。
+ *   plaza          → EMPLOYEES 总数
+ *   my-employees   → MY_EMPLOYEES 总数
+ *   skills         → SKILL_TEMPLATES 总数(技能中心列表的来源)
+ *   knowledge      → KNOWLEDGE_BASES 总数
+ *   tasks          → TASKS 中非 done 的活跃任务数(run / wait / fail)
+ *   review         → REVIEWS 总数
+ * ============================================================ */
+const NAV_COUNT_RESOLVERS = {
+  plaza:        () => EMPLOYEES.length,
+  'my-employees': () => MY_EMPLOYEES.length,
+  skills:       () => SKILL_TEMPLATES.length,
+  knowledge:    () => KNOWLEDGE_BASES.length,
+  tasks:        () => TASKS.filter((t) => t.status !== 'done').length,
+  review:       () => REVIEWS.length,
+}
+function resolveNavCounts(list) {
+  return list.map((item) => {
+    const next = { ...item }
+    if (Array.isArray(item.children) && item.children.length) {
+      next.children = resolveNavCounts(item.children)
+    } else {
+      const resolver = NAV_COUNT_RESOLVERS[item.id]
+      if (resolver) next.count = resolver()
+    }
+    return next
+  })
+}
+const NAV_RESOLVED = resolveNavCounts(NAV)
+
 export const MOCK = {
   // 全局
-  nav: NAV,
+  nav: NAV_RESOLVED,
   user: USER,
 
   // 业务

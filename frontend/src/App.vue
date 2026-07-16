@@ -1,36 +1,42 @@
 <template>
-  <!-- 装饰性背景：星空 + 网格 + 极光 + 轨道环 -->
-  <div class="cosmos-bg" aria-hidden="true">
-    <div class="cosmos-grid" />
-    <div class="cosmos-stars" />
-    <div class="cosmos-orbit cosmos-orbit--1" />
-    <div class="cosmos-orbit cosmos-orbit--2" />
-    <div class="cosmos-orbit cosmos-orbit--3" />
-    <div class="cosmos-aurora" />
-  </div>
+  <!-- 登录页：独立布局，不含 AppLayout -->
+  <router-view v-if="$route.meta?.public" />
 
-  <!-- 应用外壳 -->
-  <AppLayout>
-    <router-view v-slot="{ Component, route }">
-      <!--
-        关键优化：≤ 300ms 页面切换
-          1. <keep-alive include="..."> 缓存已渲染页面，避免重复创建 DOM
-          2. transition name="page" 配合 animations.css，仅 GPU 加速属性
-          3. onBeforeEnter 取消路由切换等待感
-      -->
-      <keep-alive :include="cachedViews" :max="5">
-        <transition name="page" mode="out-in" :duration="{ enter: 260, leave: 180 }">
-          <component :is="Component" :key="route.fullPath" />
-        </transition>
-      </keep-alive>
-    </router-view>
-  </AppLayout>
+  <!-- 应用外壳（已登录态） -->
+  <template v-else>
+    <!-- 装饰性背景：星空 + 网格 + 极光 + 轨道环 -->
+    <div class="cosmos-bg" aria-hidden="true">
+      <div class="cosmos-grid" />
+      <div class="cosmos-stars" />
+      <div class="cosmos-orbit cosmos-orbit--1" />
+      <div class="cosmos-orbit cosmos-orbit--2" />
+      <div class="cosmos-orbit cosmos-orbit--3" />
+      <div class="cosmos-aurora" />
+    </div>
 
-  <!-- 全局 Toast 容器 -->
-  <ToastContainer />
+    <!-- 应用外壳 -->
+    <AppLayout>
+      <router-view v-slot="{ Component, route }">
+        <!--
+          关键优化：≤ 300ms 页面切换
+            1. <keep-alive include="..."> 缓存已渲染页面，避免重复创建 DOM
+            2. transition name="page" 配合 animations.css，仅 GPU 加速属性
+            3. onBeforeEnter 取消路由切换等待感
+        -->
+        <keep-alive :include="cachedViews" :max="5">
+          <transition name="page" mode="out-in" :duration="{ enter: 260, leave: 180 }">
+            <component :is="Component" :key="route.fullPath" />
+          </transition>
+        </keep-alive>
+      </router-view>
+    </AppLayout>
 
-  <!-- 全局对话抽屉（员工广场 / 我的员工 / 工作台 卡片调用） -->
-  <ChatOverlay />
+    <!-- 全局 Toast 容器 -->
+    <ToastContainer />
+
+    <!-- 全局对话抽屉（员工广场 / 我的员工 / 工作台 卡片调用） -->
+    <ChatOverlay />
+  </template>
 </template>
 
 <script setup>
@@ -39,8 +45,10 @@ import AppLayout from '@/components/AppLayout.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
 import ChatOverlay from '@/components/ChatOverlay.vue'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
 
 // 需要被缓存的页面组件（name 选项）。缓存可大幅减少重复渲染开销。
 const cachedViews = [
@@ -60,6 +68,8 @@ onMounted(() => {
   appStore.initTheme()
   // 初始化侧边栏折叠状态（从 localStorage 恢复）
   appStore.initSidebar()
+  // 恢复登录会话（异步、不阻塞首屏）
+  authStore.bootstrap().catch(() => { /* 静默 */ })
 })
 </script>
 

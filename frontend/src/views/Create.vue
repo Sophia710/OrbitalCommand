@@ -8,8 +8,6 @@
           <div class="create-header__name">{{ form.name || '未命名数字员工（草稿）' }}</div>
           <div class="create-header__sub">
             <span class="chip chip--ok">草稿</span>
-            <span class="chip chip--muted">L4 · 高度自主</span>
-            <span class="chip chip--muted">{{ form.domain }} · {{ kindLabel }}方向</span>
             <span class="chip chip--muted">最近编辑：刚刚</span>
           </div>
         </div>
@@ -37,7 +35,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
-          发布到广场
+          发布
         </button>
       </div>
     </header>
@@ -64,7 +62,7 @@
             <div class="field">
               <span>可见范围</span>
               <select v-model="form.visibility">
-                <option value="team">团队内部</option>
+                <!-- 注:"团队内部" 选项已于 2026-07 永久移除(枚举收敛为 public / private 两档) -->
                 <option value="public">全员可见</option>
                 <option value="private">仅自己</option>
               </select>
@@ -120,7 +118,7 @@ const DOMAINS = ['终端', '星地链路', '载荷', '全链路', '运维']
 const form = ref({
   name: '链路健康巡检员',
   domain: '星地链路',
-  visibility: 'team',
+  visibility: 'public',   // 注:"team" 已于 2026-07 移除,默认改为 public
   description: '面向信关站链路的自动巡检与异常识别，覆盖指标采集、根因定位、处置建议生成。',
   tags: ['链路诊断', '信关站', '巡检'],
 })

@@ -5,17 +5,16 @@ import http from './index'
 import { registerRoute, MOCK, page, uid } from './mock'
 
 /* ------------ 任务监控 ------------ */
+// 注:priority 过滤参数已于 2026-07 永久移除,任务列表不再支持按优先级筛选
 registerRoute('GET /tasks/list', {
   params: {
     status:   ['string',  false],
-    priority: ['string',  false],
     pageNo:   ['number',  false],
     pageSize: ['number',  false],
   },
   handler: ({ params } = {}) => {
     let list = [...MOCK.tasks]
     if (params?.status)   list = list.filter((t) => t.status === params.status)
-    if (params?.priority) list = list.filter((t) => t.priority === params.priority)
     return page(list, Number(params?.pageNo || 1), Number(params?.pageSize || 20))
   },
 })

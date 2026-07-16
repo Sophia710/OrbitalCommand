@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { MOCK } from '@/api/mock-data'
+import { useAuthStore } from '@/stores/auth'
 
 /**
  * 路由表：与原 prototype 保持 10 个业务页面 + 404
@@ -33,7 +34,11 @@ const routeImports = {
 }
 
 const routes = [
-  { path: '/', redirect: '/workbench' },
+  /* 根路径：直接重定向到 /login
+   *   - 未登录用户：直达登录页，无需经历"进入工作台 → 会话失效 → 提示退出 → 跳转登录"的繁琐流程
+   *   - 已登录用户：登录页守卫会自动重定向到 /workbench（见下方 beforeEach）
+   *   - 此设计将"是否已登录"的判断集中到登录页守卫，避免根路径与守卫逻辑冲突 */
+  { path: '/', redirect: '/login' },
   // 旧路径兼容:早期版本使用 /dashboard,统一重定向到 /workbench
   { path: '/dashboard', redirect: '/workbench' },
   // 旧路径兼容:原 /personal-kb 已迁到 /knowledge,旧路径重定向到新路径
@@ -42,6 +47,14 @@ const routes = [
   // 旧路径兼容:专栏订阅已下线,相关路径重定向到知识库首页
   { path: '/columns', redirect: '/knowledge' },
   { path: '/columns/:pathMatch(.*)*', redirect: '/knowledge' },
+
+  // 登录页：public meta，独立布局（App.vue 中条件渲染，不使用 AppLayout）
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue'),
+    meta: { title: '登录', group: 'aux', icon: 'Lock', public: true, hidden: true },
+  },
 
   {
     path: '/workbench',
@@ -145,6 +158,39 @@ router.afterEach((to) => {
   if (to.meta?.title) {
     document.title = `${to.meta.title} · OrbitalCommand`
   }
+})
+
+/* ============================================================
+ * 全局路由守卫：登录鉴权
+ *  - 首次导航时 await bootstrap，确保 /auth/me 校验完成后再判断登录态
+ *    避免"乐观 isAuthenticated=true"导致的"先进入工作台 → 后台校验失败 → 才退出"的延迟问题
+ *  - public 路由（如 /login）始终放行；已登录访问 /login 时跳工作台
+ *  - 受保护路由：未登录 → 重定向到 /login，并通过 query.redirect 记录原目标
+ * ============================================================ */
+router.beforeEach(async (to, from, next) => {
+  const auth = useAuthStore()
+  if (!auth._bootstrapped) {
+    /* 启动恢复是异步的；首屏路由等待 bootstrap 完成后再做鉴权决策 */
+    try {
+      await auth.bootstrap()
+    } catch { /* 静默 */ }
+  }
+
+  const isPublic = !!to.meta?.public
+
+  if (isPublic) {
+    if (to.name === 'Login' && auth.isAuthenticated) {
+      return next({ path: '/workbench', replace: true })
+    }
+    return next()
+  }
+
+  if (!auth.isAuthenticated) {
+    auth.setRedirectAfterLogin(to.fullPath || '/workbench')
+    return next({ path: '/login', query: { redirect: to.fullPath }, replace: true })
+  }
+
+  next()
 })
 
 /* ============================================================

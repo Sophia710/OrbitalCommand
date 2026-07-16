@@ -215,6 +215,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { MOCK } from '@/api/mock-data'
@@ -222,6 +223,7 @@ import { MOCK } from '@/api/mock-data'
 const emit = defineEmits(['toggleSidebar', 'toggleDrawer'])
 const appStore = useAppStore()
 const userStore = useUserStore()
+const authStore = useAuthStore()
 const toast = useToastStore()
 const route = useRoute()
 const router = useRouter()
@@ -362,7 +364,17 @@ function onHelp() {
 }
 
 function onLogout() {
-  toast.success('已退出（演示）')
+  /* 关闭用户菜单 */
+  userMenuOpen.value = false
+  const name = userStore.name || '用户'
+  /* 调用 auth store 退出（清空本地 + 通知服务端） */
+  authStore.logout()
+    .catch(() => { /* 注销失败不阻塞本地清空 */ })
+    .finally(() => {
+      toast.success(`已退出 · ${name}`)
+      /* 跳转到登录页 */
+      router.replace({ path: '/login' }).catch(() => { /* 重复导航忽略 */ })
+    })
 }
 
 function goSettings() {

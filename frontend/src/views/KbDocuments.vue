@@ -151,7 +151,21 @@
             </td>
             <td>
               <div class="kb-docs-table__actions">
-                <button class="kb-docs-table__action" @click="openDoc(d)" title="预览">
+                <!--
+                  预览按钮:解析失败(以及尚未完成解析)时禁用
+                  - parse_status === 'failed'    解析失败 → 无内容可预览
+                  - parse_status === 'parsing'   正在解析 → 尚未就绪
+                  - parse_status === 'pending'   排队待解析 → 尚未就绪
+                  仅 'completed' 状态可预览
+                -->
+                <button
+                  class="kb-docs-table__action"
+                  :class="{ 'is-disabled': !canPreview(d) }"
+                  :disabled="!canPreview(d)"
+                  :aria-disabled="!canPreview(d)"
+                  :title="canPreview(d) ? '预览' : previewDisabledReason(d)"
+                  @click="openDoc(d)"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                   </svg>
@@ -388,7 +402,35 @@ function goPage(p) {
 /* 预览抽屉 */
 const previewOpen = ref(false)
 const previewDoc = ref(null)
+
+/**
+ * 判断文档是否可预览
+ * 解析失败 / 解析中 / 待解析 一律不可预览
+ * 仅 'completed' 状态可预览
+ */
+function canPreview(d) {
+  return d && d.parse_status === 'completed'
+}
+
+/**
+ * 预览按钮禁用原因(用于 title 提示)
+ */
+function previewDisabledReason(d) {
+  if (!d) return '预览不可用'
+  switch (d.parse_status) {
+    case 'failed':  return '解析失败,无法预览'
+    case 'parsing': return '解析中,解析完成后可预览'
+    case 'pending': return '排队中,解析完成后可预览'
+    default:        return '解析未完成,无法预览'
+  }
+}
+
 function openDoc(d) {
+  /* 解析失败的文档不可预览,即使 disabled 状态被绕过也要拦截 */
+  if (!canPreview(d)) {
+    ElMessage.warning(previewDisabledReason(d))
+    return
+  }
   previewOpen.value = true
   previewDoc.value = { ...d }
   // 异步获取详情,补全结构化预览
