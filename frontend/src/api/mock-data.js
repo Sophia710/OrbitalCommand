@@ -148,6 +148,22 @@ const EMPLOYEES = [
 
 const MY_EMPLOYEES = EMPLOYEES.slice(0, 5).map((e) => ({ ...e, hiredAt: NOW - 2 * DAY, source: 'subscribed' }))
 
+/* ============================================================
+ * 我的员工草稿 / 自创建员工
+ * ------------------------------------------------------------
+ *  status: 'draft'      仅保存,未提交发布
+ *          'pending'    已提交审核
+ *          'published'  已激活(发布成功)
+ *          'rejected'   审核被驳回
+ *  activated: boolean   是否对外可被订阅/使用
+ * ============================================================ */
+const MY_DRAFTS = [
+  { id: 'draft_001', kind: 'professional', domain: '星地链路', name: '链路健康巡检员', avatar: '#06b6d4', accent: '#22d3ee', tags: ['链路诊断', '信关站', '巡检'], description: '面向信关站链路的自动巡检与异常识别,覆盖指标采集、根因定位、处置建议生成。', skills: ['链路诊断', '故障定位', '数据回放'], version: '0.1.0', status: 'draft', activated: false, createdAt: NOW - 2*HOUR, updatedAt: NOW - 18*MIN, publisher: '当前用户', source: 'mine' },
+  { id: 'draft_002', kind: 'professional', domain: '载荷',     name: '遥测智能解析员', avatar: '#10b981', accent: '#a3e635', tags: ['遥测解析', '参数调优'], description: '基于历史遥测大数据的载荷参数自动调优与异常预警。', skills: ['遥测解析', '参数调优', '频谱分析'], version: '0.2.1', status: 'pending', activated: false, createdAt: NOW - 2*DAY,  updatedAt: NOW - 4*HOUR, publisher: '当前用户', source: 'mine' },
+  { id: 'draft_003', kind: 'professional', domain: '终端',     name: '终端灰度发布助理', avatar: '#f59e0b', accent: '#fde047', tags: ['OTA 升级', '终端验证', '灰度'], description: '终端固件灰度发布与回滚,实时健康度监控。', skills: ['OTA 升级', '终端验证'], version: '1.0.0', status: 'published', activated: true, createdAt: NOW - 7*DAY,  updatedAt: NOW - 1*DAY,  publisher: '当前用户', source: 'mine' },
+  { id: 'draft_004', kind: 'professional', domain: '全链路',   name: '跨域根因分析员', avatar: '#8b5cf6', accent: '#c4b5fd', tags: ['根因分析', '故障定位', '跨域'], description: '跨域告警关联与故障树驱动的根因分析。', skills: ['故障定位', '根因分析'], version: '0.3.0', status: 'rejected', activated: false, createdAt: NOW - 5*DAY,  updatedAt: NOW - 3*DAY, publisher: '当前用户', source: 'mine' },
+]
+
 /* ============ 知识库条目 ============ */
 const KB = [
   { id: 'kb_001', title: '《星地链路 QoS 策略手册 v3.2》', category: '手册', size: '2.4 MB', updatedAt: '2026-06-12' },
@@ -567,6 +583,7 @@ export const MOCK = {
   superSeries: SUPER_SERIES,
   employees: EMPLOYEES,
   myEmployees: MY_EMPLOYEES,
+  myDrafts: MY_DRAFTS,
 
   // 知识
   kb: KB,

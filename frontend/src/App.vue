@@ -22,10 +22,13 @@
             1. <keep-alive include="..."> 缓存已渲染页面，避免重复创建 DOM
             2. transition name="page" 配合 animations.css，仅 GPU 加速属性
             3. onBeforeEnter 取消路由切换等待感
+            4. :key 使用 route.path 而非 route.fullPath，
+               避免同一页面下 query 变化（如 /create → /create?action=new）
+               被错误地视为新组件并触发整页重挂载，丢失内部状态。
         -->
         <keep-alive :include="cachedViews" :max="5">
           <transition name="page" mode="out-in" :duration="{ enter: 260, leave: 180 }">
-            <component :is="Component" :key="route.fullPath" />
+            <component :is="Component" :key="route.path" />
           </transition>
         </keep-alive>
       </router-view>

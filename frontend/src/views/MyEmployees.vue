@@ -152,7 +152,14 @@ function onChat(emp) {
 }
 
 function onEdit(emp) {
-  toast.info(`编辑「${emp.name}」（示例）`)
+  // 区分两种场景：
+  //  1) 我创建的草稿（source === 'mine' 或 publisher === '当前用户'）→ 直接编辑该草稿
+  //  2) 已订阅员工（source === 'subscribed'）→ 跳转到创建员工页，以"克隆"方式作为新草稿二次编辑
+  if (isMine(emp)) {
+    router.push({ path: '/create', query: { id: emp.id, from: 'my' } })
+  } else {
+    router.push({ path: '/create', query: { clone: emp.id, from: 'my' } })
+  }
 }
 
 async function onRelease(emp) {

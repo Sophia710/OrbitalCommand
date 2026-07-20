@@ -84,19 +84,20 @@ registerRoute('POST /employees/create', {
     description: ['string', true],
   },
   handler: ({ body } = {}) => {
-    const id = uid('emp')
+    const id = uid('draft')
     const newOne = {
       id,
       kind: body.kind,
       name: body.name,
-      avatar: '#8b5cf6',
-      accent: '#a78bfa',
+      avatar: body.avatar || '#8b5cf6',
+      accent: body.accent || '#a78bfa',
       domain: body.domain,
       tags: body.tags || [],
       description: body.description,
       skills: body.skills || [],
       publisher: '当前用户',
       status: body.action === 'submit' ? 'pending' : 'draft',
+      activated: false,
       version: '0.1.0',
       usage: 0,
       rating: 0,
@@ -106,10 +107,86 @@ registerRoute('POST /employees/create', {
       kb: body.kb || [],
       tools: body.tools || [],
       model: body.model || 'qwen3-235b',
+      source: 'mine',
       createdAt: Date.now(),
+      updatedAt: Date.now(),
     }
-    MOCK.employees.unshift(newOne)
+    MOCK.myDrafts.unshift(newOne)
     return newOne
+  },
+})
+
+/* ------------ 我的员工草稿 ------------ */
+registerRoute('GET /employees/my-drafts', {
+  params: {
+    status: ['string', false],
+  },
+  handler: ({ params } = {}) => {
+    let list = [...MOCK.myDrafts]
+    if (params?.status) list = list.filter(d => d.status === params.status)
+    // 倒序:最新编辑的在前
+    list.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt))
+    return { list, total: list.length }
+  },
+})
+
+registerRoute('GET /employees/my-drafts/:id', {
+  handler: ({ pathParams } = {}) => {
+    const emp = MOCK.myDrafts.find(e => e.id === pathParams.id)
+    if (!emp) throw new Error('员工不存在')
+    return emp
+  },
+})
+
+/* ------------ 更新员工草稿 ------------ */
+registerRoute('POST /employees/update', {
+  body: {
+    id:          ['string', true],
+    name:        ['string', false],
+    domain:      ['string', false],
+    description: ['string', false],
+  },
+  handler: ({ body } = {}) => {
+    const i = MOCK.myDrafts.findIndex(e => e.id === body.id)
+    if (i < 0) throw new Error('员工不存在')
+    const allowed = ['name', 'domain', 'description', 'tags', 'skills', 'visibility', 'systemPrompt', 'greeting', 'kb', 'tools', 'model']
+    for (const k of allowed) {
+      if (k in body) MOCK.myDrafts[i][k] = body[k]
+    }
+    MOCK.myDrafts[i].updatedAt = Date.now()
+    return MOCK.myDrafts[i]
+  },
+})
+
+/* ------------ 提交发布 / 激活 ------------ */
+registerRoute('POST /employees/:id/submit', {
+  handler: ({ pathParams } = {}) => {
+    const i = MOCK.myDrafts.findIndex(e => e.id === pathParams.id)
+    if (i < 0) throw new Error('员工不存在')
+    MOCK.myDrafts[i].status = 'pending'
+    MOCK.myDrafts[i].updatedAt = Date.now()
+    return MOCK.myDrafts[i]
+  },
+})
+
+registerRoute('POST /employees/:id/activate', {
+  handler: ({ pathParams } = {}) => {
+    const i = MOCK.myDrafts.findIndex(e => e.id === pathParams.id)
+    if (i < 0) throw new Error('员工不存在')
+    MOCK.myDrafts[i].status = 'published'
+    MOCK.myDrafts[i].activated = true
+    MOCK.myDrafts[i].updatedAt = Date.now()
+    return MOCK.myDrafts[i]
+  },
+})
+
+/* ------------ 删除草稿 ------------ */
+registerRoute('POST /employees/my-drafts/delete', {
+  body: { id: ['string', true] },
+  handler: ({ body } = {}) => {
+    const i = MOCK.myDrafts.findIndex(e => e.id === body.id)
+    if (i >= 0) MOCK.myDrafts.splice(i, 1)
+    return { id: body.id, deleted: true }
   },
 })
 
@@ -124,5 +201,11 @@ export function listMyEmployees()        { return http.get('/employees/my') }
 export function hireEmployee(id)         { return http.post('/employees/hire', { id }) }
 export function releaseEmployee(id)      { return http.post('/employees/release', { id }) }
 export function createEmployee(payload)  { return http.post('/employees/create', payload) }
+export function listMyDrafts(params)     { return http.get('/employees/my-drafts', { params }) }
+export function getMyDraft(id)           { return http.get(`/employees/my-drafts/${id}`) }
+export function updateEmployee(payload)  { return http.post('/employees/update', payload) }
+export function submitEmployee(id)       { return http.post(`/employees/${id}/submit`) }
+export function activateEmployee(id)     { return http.post(`/employees/${id}/activate`) }
+export function deleteMyDraft(id)        { return http.post('/employees/my-drafts/delete', { id }) }
 export function listSkills()             { return http.get('/employees/skills') }
 export function listSuperSeries()        { return Promise.resolve(MOCK.superSeries || []) }

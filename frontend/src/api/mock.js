@@ -159,7 +159,7 @@ export async function dispatch(method, path, payload = {}) {
     const mergedParams = { ...(payload.params || {}), ...pathParams }
     validate(mergedParams, config.params)
     validate(payload.body, config.body)
-    const result = await config.handler({ params: mergedParams, body: payload.body })
+    const result = await config.handler({ params: mergedParams, body: payload.body, pathParams })
     if (result && typeof result === 'object' && 'code' in result) return result
     return ok(result)
   } catch (e) {
