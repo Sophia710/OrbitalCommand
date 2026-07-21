@@ -135,7 +135,7 @@
 
 <script setup>
 defineOptions({ name: 'Settings' })
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { getSettings, saveSettings } from '@/api/tasks-files'
 import { useAppStore } from '@/stores/app'
 import { useToastStore } from '@/stores/toast'

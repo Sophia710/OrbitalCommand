@@ -85,7 +85,6 @@
               <td class="col-time">
                 <div class="time-cell">
                   <div class="time-cell__abs">{{ formatDateTime(d.createdAt) }}</div>
-                  <div class="time-cell__rel">{{ relativeTime(d.createdAt) }}</div>
                 </div>
               </td>
               <td class="col-status">
@@ -292,7 +291,7 @@ import {
 import { useToastStore } from '@/stores/toast'
 import { useChatStore } from '@/stores/chat'
 import EmptyState from '@/components/EmptyState.vue'
-import { formatDateTime, relativeTime } from '@/utils'
+import { formatDateTime } from '@/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -508,13 +507,8 @@ async function onEdit(d) {
       isDirty.value = false
     }
     /* 同步 URL（不进入 history） */
-    router.replace({ path: '/create', query: { id: d.id } }).catch(e => {
-      if (e?.name !== 'NavigationDuplicated') {
-        console.warn('[Create] onEdit: replace warning', e?.message)
-      }
-    })
+    router.replace({ path: '/create', query: { id: d.id } }).catch(() => {})
   } catch (e) {
-    console.error('[Create] onEdit: getMyDraft failed', e?.message)
     toast.error('员工不存在或已被删除')
     backToList()
   }
@@ -1018,12 +1012,6 @@ onBeforeUnmount(() => {
   color: var(--ink);
   font-family: var(--font-mono);
   letter-spacing: 0.01em;
-}
-.time-cell__rel {
-  font-size: 10.5px;
-  color: var(--ink-3);
-  margin-top: 2px;
-  font-family: var(--font-mono);
 }
 
 /* 状态徽标 */

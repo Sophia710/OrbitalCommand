@@ -131,14 +131,8 @@ export const useAuthStore = defineStore('auth', {
             u.avatar = data.user.avatar || u.avatar
           }
         }
-      } catch (e) {
-        /* 后台校验失败：静默忽略，绝不清空本地会话
-         *  - 用户当前页面操作不受影响（isAuthenticated 仍为 true）
-         *  - 用户主动操作（如 API 调用）若再次失败，才考虑降级处理
-         *  - 这样可以避免"页面一切换就被踢回登录页"的体验问题 */
-        if (typeof console !== 'undefined' && console.debug) {
-          console.debug('[auth] 后台会话校验失败，已忽略（保留本地登录态）:', e?.message)
-        }
+      } catch (_) {
+        /* 后台校验失败：静默忽略，绝不清空本地会话 */
       }
     },
 

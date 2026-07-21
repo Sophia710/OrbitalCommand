@@ -142,7 +142,7 @@
                 {{ (d.format || '?').toUpperCase() }}
               </span>
             </td>
-            <td class="kb-docs-table__time">{{ formatTime(d.upload_time || d.created_at) }}</td>
+            <td class="kb-docs-table__time">{{ formatTimeShort(d.upload_time || d.created_at) }}</td>
             <td>
               <span class="kb-docs-table__status" :class="['is-' + (d.parse_status || 'pending')]">
                 <span class="kb-docs-table__status-dot" />
@@ -348,6 +348,7 @@ import {
   getDocumentDetail,
   deleteDocument,
 } from '@/api/smart-center'
+import { formatTimeShort } from '@/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -538,10 +539,6 @@ function formatSize(b) {
   if (b >= 1024 * 1024)        return (b / 1024 / 1024).toFixed(2) + ' MB'
   if (b >= 1024)               return (b / 1024).toFixed(1) + ' KB'
   return b + ' B'
-}
-function formatTime(t) {
-  if (!t) return '—'
-  return String(t).replace('T', ' ').slice(0, 16)
 }
 const formatTotalSize = computed(() => {
   const total = docs.value.reduce((s, d) => s + (Number(d.size_bytes) || 0), 0)

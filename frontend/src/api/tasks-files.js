@@ -81,13 +81,6 @@ registerRoute('GET /review/list', {
   },
 })
 
-registerRoute('GET /review/pending', {
-  handler: () => {
-    const list = MOCK.reviews.filter((r) => r.status === 'pending')
-    return { list, total: list.length }
-  },
-})
-
 registerRoute('POST /review/approve', {
   body: { id: ['string', true] },
   handler: ({ body } = {}) => {
@@ -150,18 +143,6 @@ registerRoute('POST /settings/save', {
   },
 })
 
-registerRoute('GET /settings/role', {
-  handler: () => MOCK.user,
-})
-
-registerRoute('POST /settings/role', {
-  body: { role: ['string', true] },
-  handler: ({ body } = {}) => {
-    MOCK.user.role = body.role
-    return { ...MOCK.user }
-  },
-})
-
 /* ------------ 暴露给视图的方法 ------------ */
 export function listTasks(params)        { return http.get('/tasks/list', { params }) }
 export function cancelTask(id)           { return http.post('/tasks/cancel', { id }) }
@@ -170,11 +151,8 @@ export function getFileTree()            { return http.get('/files/tree') }
 export function getKb()                  { return http.get('/files/kb') }
 export function uploadFile(payload)      { return http.post('/files/upload', payload) }
 export function listReviews(params)      { return http.get('/review/list', { params }) }
-export function listReviewsPending()     { return http.get('/review/pending') }
 export function approveReview(id)        { return http.post('/review/approve', { id }) }
 export function rejectReview(id, reason) { return http.post('/review/reject', { id, reason }) }
 export function listAudits(params)       { return http.get('/audit/list', { params }) }
 export function getSettings()            { return http.get('/settings/get') }
 export function saveSettings(p)          { return http.post('/settings/save', p) }
-export function getRole()                { return http.get('/settings/role') }
-export function setRole(p)               { return http.post('/settings/role', p) }

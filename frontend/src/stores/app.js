@@ -18,8 +18,7 @@ export const useAppStore = defineStore('app', {
 
   actions: {
     initTheme() {
-      const t = lsGet('oc_theme', 'dark')
-      this.theme = t
+      this.theme = lsGet('oc_theme', 'dark')
       this.applyTheme()
     },
     toggleTheme() {
@@ -36,10 +35,6 @@ export const useAppStore = defineStore('app', {
     },
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed
-      lsSet('oc_sidebar_collapsed', this.sidebarCollapsed)
-    },
-    setSidebar(v) {
-      this.sidebarCollapsed = !!v
       lsSet('oc_sidebar_collapsed', this.sidebarCollapsed)
     },
 

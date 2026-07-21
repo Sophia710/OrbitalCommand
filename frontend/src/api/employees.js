@@ -2,7 +2,7 @@
  * 员工 / 我的员工 / 创建
  * ---------------------------------------------------------------------- */
 import http from './index'
-import { registerRoute, MOCK, page, uid } from './mock'
+import { registerRoute, MOCK, page } from './mock'
 
 /* ------------ 员工广场 ------------ */
 registerRoute('GET /employees/list', {

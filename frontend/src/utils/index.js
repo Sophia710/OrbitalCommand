@@ -1,29 +1,28 @@
 /**
  * 通用工具函数
  * ------------------------------------------------------------
- *  - 基础工具：pad / formatTime / formatDate / relativeTime / uid
- *  - 函数式工具：debounce / throttle / once
- *  - 类型工具：isString / isNumber / isArray ...
- *  - 业务工具：matchFilter / classify / bytesFormat / copy / sleep / rand / pick
+ *  - 基础工具：pad / formatDateTime / formatTimeShort / relativeTime / uid
+ *  - 函数式工具：debounce
+ *  - 类型工具：isString / isNumber / isArray
+ *  - 业务工具：matchFilter / bytesFormat / percent / clamp / copy / sleep / rand / pick
  */
 
 export function pad(n, len = 2, ch = '0') {
   return String(n).padStart(len, ch)
 }
 
-export function formatTime(d) {
-  const x = d instanceof Date ? d : new Date(d)
-  return `${pad(x.getHours())}:${pad(x.getMinutes())}:${pad(x.getSeconds())}`
-}
-
+/* YYYY-MM-DD HH:mm:ss（Create 表格列使用） */
 export function formatDateTime(d) {
   const x = d instanceof Date ? d : new Date(d)
-  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())} ${formatTime(x)}`
+  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())} ${pad(x.getHours())}:${pad(x.getMinutes())}:${pad(x.getSeconds())}`
 }
 
-export function formatDate(d) {
-  const x = d instanceof Date ? d : new Date(d)
-  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`
+/* UI 列表短格式：YYYY-MM-DD HH:mm（KbDocuments / PersonalKb 使用） */
+export function formatTimeShort(t) {
+  if (!t) return '—'
+  const x = new Date(t)
+  if (Number.isNaN(x.getTime())) return String(t).slice(0, 16).replace('T', ' ')
+  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())} ${pad(x.getHours())}:${pad(x.getMinutes())}`
 }
 
 export function relativeTime(ts) {
@@ -36,7 +35,7 @@ export function relativeTime(ts) {
   if (h < 24) return `${h}h 前`
   const d = Math.floor(h / 24)
   if (d < 30) return `${d}d 前`
-  return formatDate(ts)
+  return formatDateTime(ts).slice(0, 10)
 }
 
 export function uid(prefix = 'id') {
@@ -51,36 +50,10 @@ export function debounce(fn, wait = 200) {
   }
 }
 
-export function throttle(fn, gap = 200) {
-  let last = 0
-  return function (...args) {
-    const now = Date.now()
-    if (now - last >= gap) {
-      last = now
-      fn.apply(this, args)
-    }
-  }
-}
-
-export function once(fn) {
-  let called = false
-  let result
-  return function (...args) {
-    if (!called) {
-      called = true
-      result = fn.apply(this, args)
-    }
-    return result
-  }
-}
-
 /* ---------------- 类型判断 ---------------- */
 export const isString  = (v) => typeof v === 'string'
 export const isNumber  = (v) => typeof v === 'number' && !Number.isNaN(v)
-export const isBoolean = (v) => typeof v === 'boolean'
 export const isArray   = (v) => Array.isArray(v)
-export const isObject  = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
-export const isEmpty   = (v) => v == null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0)
 
 /* ---------------- 业务工具 ---------------- */
 export function bytesFormat(n) {

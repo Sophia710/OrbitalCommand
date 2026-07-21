@@ -2,7 +2,7 @@
  * 指挥中心 / 数据应用
  * ---------------------------------------------------------------------- */
 import http from './index'
-import { registerRoute, MOCK, page } from './mock'
+import { registerRoute, MOCK } from './mock'
 
 /* ------------ 指挥中心 ------------ */
 registerRoute('GET /dashboard/overview', {
@@ -16,15 +16,6 @@ registerRoute('GET /dashboard/overview', {
     beamLabels: MOCK.beamLabels,
     satHealth: MOCK.satHealth,
   }),
-})
-
-registerRoute('GET /dashboard/kpi', {
-  handler: () => MOCK.kpis,
-})
-
-registerRoute('GET /dashboard/alarms', {
-  params: { pageNo: ['number', false], pageSize: ['number', false] },
-  handler: ({ params } = {}) => page(MOCK.alarms, Number(params?.pageNo || 1), Number(params?.pageSize || 20)),
 })
 
 registerRoute('GET /dashboard/tasks', {
@@ -69,9 +60,6 @@ registerRoute('GET /data/coverage', {
 })
 
 /* ------------ 暴露给视图的方法 ------------ */
-export function getOverview()        { return http.get('/dashboard/overview') }
-export function getKpi()             { return http.get('/dashboard/kpi') }
-export function getAlarms(params)    { return http.get('/dashboard/alarms', { params }) }
 export function getTasks(params)     { return http.get('/dashboard/tasks', { params }) }
 export function getDataOverview()    { return http.get('/data/overview') }
 export function getCoverage()        { return http.get('/data/coverage') }

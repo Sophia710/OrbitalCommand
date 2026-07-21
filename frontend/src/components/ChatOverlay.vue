@@ -694,9 +694,6 @@ if (typeof window !== 'undefined') {
     }
     _recognition.onerror = (e) => {
       stopVoice(false)
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-        console.warn('[voice] permission denied')
-      }
     }
     _recognition.onend = () => {
       if (voiceState.value === 'recording') {

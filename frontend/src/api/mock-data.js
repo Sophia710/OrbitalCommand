@@ -608,5 +608,3 @@ export const MOCK = {
   sharedLinks:      SHARED_LINKS,
   visibilityLabels: VISIBILITY_LABELS,
 }
-
-export default MOCK

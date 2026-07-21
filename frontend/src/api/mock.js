@@ -9,7 +9,7 @@
  *  - 错误处理：校验失败 → code:400；未注册 → code:404；handler 抛错 → code:500
  */
 
-import { uid, sleep, rand } from '@/utils'
+import { sleep, rand, uid } from '@/utils'
 import { MOCK } from './mock-data'
 
 export const DEFAULT_LATENCY = 800
@@ -149,7 +149,6 @@ export async function dispatch(method, path, payload = {}) {
   await delay()
 
   if (!resolved) {
-    console.warn(`[mock] no handler for ${key}`)
     return fail(`mock 路由未注册: ${key}`, 404)
   }
 

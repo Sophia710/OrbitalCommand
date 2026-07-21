@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { MOCK } from '@/api/mock-data'
 import { useAuthStore } from '@/stores/auth'
 
 /**
@@ -222,5 +221,4 @@ export function startRoutePreload() {
   })
 }
 
-export { MOCK }
 export default router

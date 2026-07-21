@@ -36,7 +36,6 @@ const MOCK_HISTORY = [
 function buildInitialMessages(emp) {
   return [
     { id: newId(), who: 'bot', text: `你好，我是「${emp.name}」。${emp.description || ''}你可以直接描述任务，我会调用工具与知识库辅助完成。`, t: '19:36:52' },
-    // { id: newId(), who: 'bot', text: '你可以直接描述任务，我会调用工具与知识库辅助完成。', t: '刚刚', suggest: ['发起一次链路诊断', '列出本周告警', '生成本日报告'] },
   ]
 }
 

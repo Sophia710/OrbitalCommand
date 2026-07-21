@@ -19,7 +19,7 @@
  *    POST /columns/batch-subscribe, POST /columns/prefs
  */
 import http from './index'
-import { registerRoute, MOCK, page, uid } from './mock'
+import { registerRoute, MOCK, page } from './mock'
 
 /* ============================================================
  * 技能 · Skills
@@ -52,39 +52,9 @@ registerRoute('GET /skills/list', {
   },
 })
 
-registerRoute('GET /skills/detail', {
-  params: { id: ['string', true] },
-  handler: ({ params } = {}) => {
-    const s = MOCK.skillsFull.find((x) => x.id === params.id)
-    if (!s) throw new Error('技能不存在')
-    /* 关联员工:从数字员工池中按 domain / 标签匹配 */
-    const linked = (MOCK.employees || [])
-      .filter((e) => Array.isArray(e.skills) && e.skills.includes(s.name))
-      .slice(0, 6)
-      .map((e) => ({
-        id: e.id,
-        name: e.name,
-        domain: e.domain,
-        color: e.avatar,
-        usage: e.usage || 0,
-      }))
-    return { ...s, linkedEmployees: linked }
-  },
-})
-
 /* ============================================================
  * 知识库 · Knowledge Bases (含个人知识库)
  * ============================================================ */
-/* 知识库分类元数据(7 大分类,带 icon 与配色) */
-registerRoute('GET /knowledge-bases/categories', {
-  handler: () => ({
-    list: MOCK.knowledgeBaseCategories || [],
-    counts: (MOCK.knowledgeBaseCategories || []).map((c) => ({
-      ...c,
-      count: MOCK.knowledgeBases.filter((k) => k.category === c.key).length,
-    })),
-  }),
-})
 
 registerRoute('GET /knowledge-bases/list', {
   params: {
@@ -414,61 +384,6 @@ registerRoute('GET /documents/detail', {
   },
 })
 
-/* 文档内容全文搜索(跨知识库,支持高亮) */
-registerRoute('GET /documents/search', {
-  params: {
-    keyword: ['string', true],
-    kb_id:   ['string', false],
-    tag:     ['string', false],
-    format:  ['string', false],
-    limit:   ['number', false],
-  },
-  handler: ({ params } = {}) => {
-    const kw = String(params.keyword || '').toLowerCase().trim()
-    if (!kw) return { list: [], total: 0 }
-    let list = [...MOCK.documents]
-    if (params?.kb_id && params.kb_id !== 'all') {
-      list = list.filter((d) => d.knowledge_base_id === params.kb_id)
-    }
-    if (params?.tag) {
-      list = list.filter((d) => (d.tags || []).includes(params.tag))
-    }
-    if (params?.format && params.format !== 'all') {
-      list = list.filter((d) => (d.format || '').toLowerCase() === params.format.toLowerCase())
-    }
-    list = list.filter((d) => {
-      const hay = [
-        d.filename || '',
-        (d.tags || []).join(' '),
-        d.content_index || '',
-      ].join(' ').toLowerCase()
-      return hay.includes(kw)
-    })
-    const limit = Number(params?.limit || 20)
-    const items = list.slice(0, limit).map((d) => {
-      const text = d.content_index || ''
-      const idx = text.toLowerCase().indexOf(kw)
-      let snippet = ''
-      if (idx >= 0) {
-        const start = Math.max(0, idx - 32)
-        const end = Math.min(text.length, idx + kw.length + 60)
-        snippet = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '')
-      } else {
-        snippet = text.slice(0, 80) + (text.length > 80 ? '…' : '')
-      }
-      const kb = MOCK.knowledgeBases.find((k) => k.id === d.knowledge_base_id)
-      return {
-        ...d,
-        content_snippet: snippet,
-        kb_name: kb?.name || '—',
-        kb_color: kb?.color_theme || '#5b8def',
-        kb_category: kb?.category || 'custom',
-      }
-    })
-    return { list: items, total: list.length, keyword: kw }
-  },
-})
-
 /* 文档版本历史 */
 registerRoute('GET /documents/versions', {
   params: { id: ['string', true] },
@@ -508,29 +423,6 @@ registerRoute('GET /documents/versions', {
   },
 })
 
-/* 更新文档元数据(tags / 提交新版本) */
-registerRoute('PUT /documents', {
-  body: {
-    id:           ['string',  true],
-    tags:         ['array',   false],
-    bump_version: ['boolean', false],
-    changelog:    ['string',  false],
-  },
-  handler: ({ body } = {}) => {
-    const doc = MOCK.documents.find((d) => d.id === body.id)
-    if (!doc) throw new Error('文档不存在')
-    if (Array.isArray(body.tags)) doc.tags = body.tags
-    if (body.bump_version) {
-      const parts = (doc.version || '1.0.0').split('.').map((p) => Number(p) || 0)
-      parts[2] = (parts[2] || 0) + 1
-      doc.version = parts.join('.')
-      doc.last_modified = new Date().toISOString().replace('T', ' ').slice(0, 16)
-      MOCK.documentVersions[doc.id] = doc.version
-    }
-    return { id: doc.id, version: doc.version, tags: doc.tags, last_modified: doc.last_modified }
-  },
-})
-
 /* 文档分享设置(创建 / 更新) */
 registerRoute('POST /documents/share', {
   body: {
@@ -565,69 +457,6 @@ registerRoute('DELETE /documents', {
     delete MOCK.documentVersions[removed.id]
     delete MOCK.documentShares[removed.id]
     return { id: removed.id, message: '已删除' }
-  },
-})
-
-/* 批量上传文档 */
-registerRoute('POST /documents/batch', {
-  body: {
-    knowledge_base_id: ['string', true],
-    files:             ['array',  true], // [{ filename, format, size_bytes }]
-  },
-  handler: ({ body } = {}) => {
-    const kb = MOCK.knowledgeBases.find((k) => k.id === body.knowledge_base_id)
-    if (!kb) throw new Error('知识库不存在')
-    if (!Array.isArray(body.files) || body.files.length === 0) {
-      throw new Error('未提供文件')
-    }
-    const created = []
-    for (const f of body.files) {
-      const id = `doc-${uid().slice(0, 8)}`
-      const now = new Date().toISOString().replace('T', ' ').slice(0, 16)
-      const doc = {
-        id,
-        knowledge_base_id: body.knowledge_base_id,
-        filename:          f.filename,
-        format:            f.format,
-        size_bytes:        f.size_bytes || Math.round(100_000 + Math.random() * 2_000_000),
-        parse_status:      'pending',
-        uploader_name:     'Alex Chen',
-        upload_time:       now,
-        last_modified:     now,
-        modifier_name:     'Alex Chen',
-        version:           '1.0.0',
-        tags:              f.tags || [],
-        share:             { mode: 'private', link: '' },
-        shared_members:    [],
-        content_index:     f.content_index || `批量上传的 ${f.format} 文档,正在解析中...`,
-        chunk_count:       Math.round(20 + (f.size_bytes || 200_000) / 50_000),
-        token_count:       Math.round((f.size_bytes || 200_000) / 4),
-      }
-      MOCK.documents.unshift(doc)
-      created.push({ id, filename: f.filename, ok: true })
-    }
-    return { created, count: created.length, message: `成功上传 ${created.length} 个文件` }
-  },
-})
-
-/* 批量删除文档 */
-registerRoute('POST /documents/batch-delete', {
-  body: { ids: ['array', true] },
-  handler: ({ body } = {}) => {
-    const ids = body.ids || []
-    const results = []
-    for (const id of ids) {
-      const idx = MOCK.documents.findIndex((d) => d.id === id)
-      if (idx >= 0) {
-        const [removed] = MOCK.documents.splice(idx, 1)
-        delete MOCK.documentVersions[removed.id]
-        delete MOCK.documentShares[removed.id]
-        results.push({ id, ok: true })
-      } else {
-        results.push({ id, ok: false, error: '文档不存在' })
-      }
-    }
-    return { results, count: results.filter((r) => r.ok).length }
   },
 })
 
@@ -707,21 +536,15 @@ registerRoute('DELETE /knowledge-bases', {
  *    getRecentArticles / getArticleDetail / getColumnArticles)已下线
  * ============================================================ */
 export const listSkills       = (params) => http.get('/skills/list', { params })
-export const getSkillDetail   = (id)    => http.get('/skills/detail', { params: { id } })
 export const listKnowledgeBases = (params) => http.get('/knowledge-bases/list', { params })
 export const getKnowledgeBaseDetail = (id) => http.get('/knowledge-bases/detail', { params: { id } })
 export const getKnowledgeBaseStats  = ()    => http.get('/knowledge-bases/stats')
-export const getKnowledgeBaseCategories = () => http.get('/knowledge-bases/categories')
 export const createKnowledgeBase    = (body) => http.post('/knowledge-bases', body)
 export const updateKnowledgeBase    = (body) => http.put('/knowledge-bases', body)
 export const deleteKnowledgeBase    = (id)    => http.delete('/knowledge-bases', { params: { id } })
 export const uploadDocument         = (body) => http.post('/documents', body)
-export const batchUploadDocuments   = (body) => http.post('/documents/batch', body)
-export const batchDeleteDocuments   = (ids)  => http.post('/documents/batch-delete', { ids })
 export const reparseDocument        = (id)    => http.post('/documents/reparse', { id })
 export const getDocumentDetail      = (id)    => http.get('/documents/detail', { params: { id } })
-export const updateDocument         = (body) => http.put('/documents', body)
 export const deleteDocument         = (id)    => http.delete('/documents', { params: { id } })
-export const searchDocuments        = (params) => http.get('/documents/search', { params })
 export const getDocumentVersions    = (id)    => http.get('/documents/versions', { params: { id } })
 export const setDocumentShare       = (body) => http.post('/documents/share', body)

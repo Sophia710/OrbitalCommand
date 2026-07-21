@@ -2,7 +2,6 @@
  * Pinia · toast store
  * ---------------------------------------------------------------------- */
 import { defineStore } from 'pinia'
-import { uid } from '@/utils'
 
 let TOAST_ID = 0
 

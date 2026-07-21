@@ -110,7 +110,7 @@
             <span>容量</span>
           </div>
           <div class="kb-card__kpi">
-            <b>{{ formatTime(kb.updated_at) }}</b>
+            <b>{{ formatTimeShort(kb.updated_at) }}</b>
             <span>更新</span>
           </div>
         </div>
@@ -249,6 +249,7 @@ import {
   createKnowledgeBase, updateKnowledgeBase, deleteKnowledgeBase,
 } from '@/api/smart-center'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { formatTimeShort } from '@/utils'
 
 const VISIBILITY_OPTIONS = [
   { key: 'private',      name: '私有' },
@@ -291,10 +292,6 @@ function formatSize(n) {
   if (n >= 1e6) return (n / 1e6).toFixed(2) + ' MB'
   if (n >= 1e3) return (n / 1e3).toFixed(1) + ' KB'
   return n + ' B'
-}
-function formatTime(t) {
-  if (!t) return '—'
-  return t
 }
 function visibilityLabel(v) { return VISIBILITY_LABEL[v] || '私有' }
 function iconStyle(kb) {

@@ -336,7 +336,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { listSkills, getSkillDetail } from '@/api/smart-center'
+import { listSkills } from '@/api/smart-center'
 import { useCustomSkills } from '@/composables/useCustomSkills'
 import { useToastStore } from '@/stores/toast'
 import CreateSkillModal from '@/components/CreateSkillModal.vue'
