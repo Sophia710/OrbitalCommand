@@ -11,7 +11,8 @@
     "test:filter": "node __test_matchfilter.js",
     "test:plaza": "node __test_plaza_integration.js",
     "test:regression": "node __test_regression.js",
-    "test": "node __test_matchfilter.js && node __test_plaza_integration.js && node __test_regression.js"
+    "test:market-radar": "node __test_market_radar_regression.cjs",
+    "test": "node __test_matchfilter.js && node __test_regression.js && node __test_market_radar_regression.cjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

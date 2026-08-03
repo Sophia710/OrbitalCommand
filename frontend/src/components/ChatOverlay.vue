@@ -45,6 +45,46 @@
             </div>
           </div>
         </div>
+
+        <!-- ============ 工具箱入口（仅市场商机分析员 · 置底固定）============ -->
+        <div v-if="isMarketRadar" class="chat-sidebar__toolbox">
+          <button
+            type="button"
+            class="chat-sidebar__toolbox-btn"
+            :class="{ 'is-open': toolboxOpen }"
+            :aria-expanded="toolboxOpen"
+            aria-label="工具箱"
+            @click="toggleToolbox"
+          >
+            <span class="chat-sidebar__toolbox-emoji">🧰</span>
+            <span class="chat-sidebar__toolbox-label">工具箱</span>
+            <span class="chat-sidebar__toolbox-caret" :class="{ 'is-up': toolboxOpen }">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+          <div v-if="toolboxOpen" class="chat-sidebar__toolbox-panel">
+            <button
+              type="button"
+              class="chat-sidebar__toolbox-entry"
+              @click="openDataSourceDialog"
+            >
+              <span class="chat-sidebar__toolbox-emoji">📡</span>
+              <span class="chat-sidebar__toolbox-entry-label">数据源设置</span>
+              <span class="chat-sidebar__toolbox-arrow">→</span>
+            </button>
+            <button
+              type="button"
+              class="chat-sidebar__toolbox-entry"
+              @click="openPushDialog"
+            >
+              <span class="chat-sidebar__toolbox-emoji">🔔</span>
+              <span class="chat-sidebar__toolbox-entry-label">消息推送</span>
+              <span class="chat-sidebar__toolbox-arrow">→</span>
+            </button>
+          </div>
+        </div>
       </aside>
 
       <!-- 主区：左对话 + 右面板 -->
@@ -202,6 +242,28 @@
                 <div class="chat-step__body">{{ m.detail }}</div>
               </div>
 
+              <!-- ============ 市场商机分析员专用消息类型（仅 isMarketRadar · C/D）============ -->
+              <MarketChart
+                v-else-if="m.who === 'chart' && isMarketRadar"
+                :chart-type="m.chartType"
+                :title="m.title"
+                :desc="m.desc"
+                :data="m.data"
+              />
+              <ResultList
+                v-else-if="m.who === 'result_list' && isMarketRadar"
+                :title="m.title"
+                :total="m.total"
+                :high-count="m.highCount"
+                :mid-count="m.midCount"
+                :items="m.items"
+              />
+              <DownloadBar
+                v-else-if="m.downloadActions && m.downloadActions.length && isMarketRadar"
+                :actions="m.downloadActions"
+                :source="m"
+              />
+
               <!-- 普通消息 -->
               <div
                 v-else
@@ -320,6 +382,24 @@
                   :accept="ACCEPTED_EXTS.join(',')"
                   @change="onFilePick"
                 />
+                <!-- ============ 知识库绑定按钮（仅市场商机分析员 · B.3）============ -->
+                <button
+                  v-if="isMarketRadar"
+                  type="button"
+                  class="chat-input__tool chat-input__tool--bind"
+                  :class="{ 'is-disabled': chat.thinking, 'is-bound': boundDocCount > 0 }"
+                  :disabled="chat.thinking"
+                  :aria-label="boundDocCount ? `已绑定 ${boundDocCount} 篇知识库` : '绑定知识库'"
+                  :title="boundDocCount ? `已绑定 ${boundDocCount} 篇知识库 · 点击管理` : '绑定知识库'"
+                  @click="openKnowledgeDrawer"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <path d="M9 13h6M9 17h4" />
+                  </svg>
+                  <span v-if="boundDocCount" class="chat-input__tool-badge">{{ boundDocCount }}</span>
+                </button>
                 <button
                   type="button"
                   class="chat-input__tool"
@@ -576,6 +656,14 @@
           </aside>
         </transition>
       </section>
+
+      <!-- ============ 知识库引用上标浮层（仅市场商机分析员 · C.7）============ -->
+      <KnowledgeRef v-if="isMarketRadar" />
+
+      <!-- ============ 工具箱弹窗/抽屉（仅市场商机分析员 · B/C）============ -->
+      <DataSourceDialog     v-if="isMarketRadar" v-model="dataSourceDialogOpen" />
+      <PushDialog           v-if="isMarketRadar" v-model="pushDialogOpen" />
+      <KnowledgeBindDrawer  v-if="isMarketRadar" v-model="knowledgeDrawerOpen" />
     </div>
   </transition>
 </template>
@@ -584,6 +672,14 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import TreeNode from '@/components/TreeNode.vue'
+import KnowledgeRef from '@/components/tools/KnowledgeRef.vue'
+/* ============ 市场商机分析员专用组件（仅 isMarketRadar 时按需挂载）============ */
+import DataSourceDialog from '@/components/tools/DataSourceDialog.vue'
+import PushDialog from '@/components/tools/PushDialog.vue'
+import KnowledgeBindDrawer from '@/components/tools/KnowledgeBindDrawer.vue'
+import MarketChart from '@/components/charts/MarketChart.vue'
+import ResultList from '@/components/charts/ResultList.vue'
+import DownloadBar from '@/components/tools/DownloadBar.vue'
 
 const chat = useChatStore()
 const overlay = ref(null)
@@ -592,6 +688,43 @@ const textareaEl = ref(null)
 const fileInputEl = ref(null)
 const input = ref('')
 const isInputFocus = ref(false)
+
+/* ============================================================
+ * 市场商机分析员 · 隔离识别（B.1）
+ *  - 仅在 employee.id === 'market-radar-001' 时为 true
+ *  - 所有新功能（工具箱 / 知识库绑定 / 图表 / 下载）通过 v-if 隔离
+ *  - 其他员工始终为 false，DOM 中不出现任何新元素
+ * ============================================================ */
+const isMarketRadar = computed(() => chat.employee?.id === 'market-radar-001')
+
+/* 工具箱折叠状态（B.2） */
+const toolboxOpen = ref(false)
+const toggleToolbox = () => { toolboxOpen.value = !toolboxOpen.value }
+
+/* 弹窗 / 抽屉开关（B.4） */
+const dataSourceDialogOpen = ref(false)
+const pushDialogOpen = ref(false)
+const knowledgeDrawerOpen = ref(false)
+
+/* 已绑定知识库条目（B.3 角标） */
+const boundDocCount = computed(() => (chat.boundDocs && chat.boundDocs.length) || 0)
+
+const openDataSourceDialog = () => { dataSourceDialogOpen.value = true }
+const openPushDialog      = () => { pushDialogOpen.value = true }
+const openKnowledgeDrawer = () => { knowledgeDrawerOpen.value = true }
+const closeDataSourceDialog = () => { dataSourceDialogOpen.value = false }
+const closePushDialog      = () => { pushDialogOpen.value = false }
+const closeKnowledgeDrawer = () => { knowledgeDrawerOpen.value = false }
+
+/* 关闭 ChatOverlay 时同步重置所有新功能开关，避免污染下一次打开 */
+watch(() => chat.open, (open) => {
+  if (!open) {
+    toolboxOpen.value = false
+    dataSourceDialogOpen.value = false
+    pushDialogOpen.value = false
+    knowledgeDrawerOpen.value = false
+  }
+})
 
 /* ============ 文件上传 ============ */
 const ACCEPTED_EXTS = [
@@ -773,15 +906,28 @@ function toggleCardCollapse(id) { collapsedCards.value[id] = !collapsedCards.val
 
 /**
  * 行内 Markdown 渲染（最小实现）
- * 支持：**bold**、`code`、换行
+ * 支持：**bold**、`code`、换行、知识库引用上标 [n]（仅市场商机分析员 · C.7）
+ *  - [n] 模式：n 为 1-based 引用序号，对应 chat.boundDocs[n-1]
+ *  - 仅在 isMarketRadar 时把 [n] 渲染为 sup.kb-ref；其他员工把 [n] 当作纯文本
  */
 function renderInline(text) {
   if (!text) return ''
-  return String(text)
+  let s = String(text)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/`([^`]+)`/g, '<code class="chat-md__inline">$1</code>')
-    .replace(/\n/g, '<br/>')
+  if (isMarketRadar.value) {
+    /* [n] 知识库引用上标，n 为 1+ 整数。boundDocs 至少 1 条才显示上标样式 */
+    if (boundDocCount.value > 0) {
+      s = s.replace(/\[(\d+)\]/g, (m, n) => {
+        const idx = parseInt(n, 10)
+        if (idx < 1 || idx > boundDocCount.value) return m
+        return `<sup class="kb-ref" data-kb-index="${idx}">[${idx}]</sup>`
+      })
+    }
+  }
+  s = s.replace(/\n/g, '<br/>')
+  return s
 }
 
 /* ---------- 模拟进程步骤（同步显示第 1 轮 FSPL 任务） ---------- */
@@ -1300,6 +1446,111 @@ watch(() => chat.messages.length, () => scrollToBottom())
 .chat-sidebar__title { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
 .chat-history { flex: 1; overflow-y: auto; }
 .chat-history__group { margin-bottom: 16px; }
+
+/* ============================================================
+ * 工具箱（仅市场商机分析员 · 置底固定）
+ *  - 与系统卡片风格一致：var(--surface-2) + var(--line) + 12px 圆角
+ *  - 通过 mt: auto 在 flex column 中固定到 aside 底部
+ * ============================================================ */
+.chat-sidebar__toolbox {
+  margin-top: auto;          /* 把工具箱推到 aside 底部 */
+  padding: 12px 4px 4px;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  position: relative;
+}
+.chat-sidebar__toolbox-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease);
+}
+.chat-sidebar__toolbox-btn:hover {
+  background: var(--accent-soft);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: var(--accent);
+}
+.chat-sidebar__toolbox-btn.is-open {
+  background: var(--accent-soft);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: var(--accent);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+}
+.chat-sidebar__toolbox-emoji {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.chat-sidebar__toolbox-label { flex: 1; text-align: left; }
+.chat-sidebar__toolbox-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+  transition: transform 200ms var(--ease), color 160ms var(--ease);
+}
+.chat-sidebar__toolbox-caret.is-up { transform: rotate(180deg); }
+.chat-sidebar__toolbox-btn:hover .chat-sidebar__toolbox-caret,
+.chat-sidebar__toolbox-btn.is-open .chat-sidebar__toolbox-caret { color: var(--accent); }
+.chat-sidebar__toolbox-caret svg { width: 14px; height: 14px; }
+
+/* 折叠面板（向上展开，避开 history 滚动区）*/
+.chat-sidebar__toolbox-panel {
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  animation: toolboxPanelIn 180ms var(--ease);
+}
+@keyframes toolboxPanelIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.chat-sidebar__toolbox-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.chat-sidebar__toolbox-entry:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.chat-sidebar__toolbox-entry-label { flex: 1; }
+.chat-sidebar__toolbox-arrow {
+  color: var(--ink-3);
+  font-size: 14px;
+  transition: transform 160ms var(--ease), color 160ms var(--ease);
+}
+.chat-sidebar__toolbox-entry:hover .chat-sidebar__toolbox-arrow {
+  color: var(--accent);
+  transform: translateX(2px);
+}
 .chat-history__date {
   font-size: 11px;
   color: var(--ink-3);
@@ -1674,6 +1925,29 @@ watch(() => chat.messages.length, () => scrollToBottom())
   background: var(--surface);
   border: 1px solid var(--line);
   color: var(--accent);
+}
+/* ============ 知识库引用上标（C.7 · 仅市场商机分析员）============ */
+.kb-ref {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 5px;
+  margin: 0 1px;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.14);
+  color: var(--accent, #a78bfa);
+  border: 1px solid rgba(139, 92, 246, 0.32);
+  cursor: help;
+  vertical-align: super;
+  font-weight: 600;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.kb-ref:hover {
+  background: rgba(139, 92, 246, 0.28);
+  border-color: rgba(139, 92, 246, 0.55);
+  color: #c4b5fd;
 }
 .chat-md__code {
   font-family: var(--font-mono);

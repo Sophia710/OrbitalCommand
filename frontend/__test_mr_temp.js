@@ -1,4 +1,5 @@
-/**
+
+    /**
  * Mock 引擎（前端纯 Promise 模拟）
  * ----------------------------------------------------------------------
  *  - delay / ok / fail / page / uid 等基础工具
@@ -9,8 +10,8 @@
  *  - 错误处理：校验失败 → code:400；未注册 → code:404；handler 抛错 → code:500
  */
 
-import { sleep, rand, uid } from '@/utils'
-import { MOCK } from './mock-data'
+
+
 
 export const DEFAULT_LATENCY = 800
 export const JITTER = 350
@@ -430,3 +431,11 @@ export function scheduleMarketRadarStream(chatStore, processCardId) {
   }
   _mrSchedule(runOne, 200)
 }
+
+    /* stub 依赖 */
+    const MOCK = { employees: [] }
+    const sleep = () => Promise.resolve()
+    const rand = () => 0
+    const uid = (p) => p + '-' + Math.random().toString(36).slice(2, 8)
+    module.exports = { buildMarketRadarMessages, scheduleMarketRadarStream, abortMarketRadarStream, MR_STEPS: (() => { try { return eval('MR_STEPS') } catch { return [] } })(), DEFAULT_LATENCY, JITTER }
+  

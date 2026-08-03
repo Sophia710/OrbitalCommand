@@ -162,17 +162,17 @@
             <div class="create-header__sub">
               <span class="chip chip--ok">{{ form.id ? statusLabel(form.status) : '草稿' }}</span>
               <span class="chip chip--muted">{{ form.domain || '未选领域' }}</span>
-              <span class="chip chip--muted">最近编辑：{{ isDirty ? '有改动' : '刚刚' }}</span>
+              <span class="chip chip--muted">最近编辑：{{ isDirty ? '2026-01-01 12:00:00' : '刚刚' }}</span>
             </div>
           </div>
         </div>
         <div class="create-header__actions">
-          <button class="btn btn--ghost" @click="onSaveDraft" :disabled="saving">
+          <!-- <button class="btn btn--ghost" @click="onSaveDraft" :disabled="saving">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
             </svg>
             保存草稿
-          </button>
+          </button> -->
           <button class="btn btn--ghost" @click="onTestRun" :disabled="!form.name?.trim()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -347,7 +347,7 @@ const stats = computed(() => {
 
 const statusTabs = computed(() => [
   { value: '',         label: '全部',   count: stats.value.total },
-  { value: 'draft',    label: '草稿',   count: stats.value.draft },
+  { value: 'draft',    label: '已保存',   count: stats.value.draft },
   { value: 'pending',  label: '审核中', count: stats.value.pending },
   { value: 'published',label: '已激活', count: stats.value.published },
   { value: 'rejected', label: '已驳回', count: stats.value.rejected },
@@ -454,7 +454,7 @@ function avatarBg(d) {
 
 function statusLabel(s) {
   return ({
-    draft:     '草稿',
+    draft:     '已保存',
     pending:   '审核中',
     published: '已发布',
     rejected:  '已驳回',

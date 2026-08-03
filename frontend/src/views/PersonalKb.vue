@@ -38,11 +38,6 @@
           >私有<span>{{ countByVisibility('private') }}</span></button>
           <button
             class="seg-toggle__btn"
-            :class="{ 'is-active': filter.scope === 'organization' }"
-            @click="filter.scope = 'organization'; reload()"
-          >组织<span>{{ countByVisibility('organization') }}</span></button>
-          <button
-            class="seg-toggle__btn"
             :class="{ 'is-active': filter.scope === 'public' }"
             @click="filter.scope = 'public'; reload()"
           >公开<span>{{ countByVisibility('public') }}</span></button>
@@ -252,15 +247,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatTimeShort } from '@/utils'
 
 const VISIBILITY_OPTIONS = [
-  { key: 'private',      name: '私有' },
-  { key: 'organization', name: '组织' },
-  { key: 'public',       name: '公开' },
+  { key: 'private', name: '私有' },
+  { key: 'public',  name: '公开' },
 ]
-const VISIBILITY_LABEL = { private: '私有', organization: '组织', public: '公开' }
+const VISIBILITY_LABEL = { private: '私有', public: '公开' }
 const VISIBILITY_COLORS = {
-  private:      { bg: '#fef3c7', fg: '#b45309' },
-  organization: { bg: '#dbeafe', fg: '#1d4ed8' },
-  public:       { bg: '#dcfce7', fg: '#15803d' },
+  private: { bg: '#fef3c7', fg: '#b45309' },
+  public:  { bg: '#dcfce7', fg: '#15803d' },
 }
 
 const entering = ref(false)
@@ -398,7 +391,7 @@ async function confirmUpdate() {
 async function quickChangeVisibility(kb) {
   closeKbMenu()
   if (!kb) return
-  const order = ['private', 'organization', 'public']
+  const order = ['private', 'public']
   const next = order[(order.indexOf(kb.visibility) + 1) % order.length]
   const name = VISIBILITY_LABEL[next]
   try {
@@ -541,7 +534,6 @@ onUnmounted(() => { entering.value = false })
 }
 .kb-card__vis-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
 .kb-card__vis.is-private      { background: #fef3c7; color: #b45309; }
-.kb-card__vis.is-organization { background: #dbeafe; color: #1d4ed8; }
 .kb-card__vis.is-public       { background: #dcfce7; color: #15803d; }
 
 .kb-card__menu {

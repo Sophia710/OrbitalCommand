@@ -3,6 +3,7 @@
  * 全局对话抽屉状态：被员工广场 / 我的员工 / 工作台 卡片调用
  * ---------------------------------------------------------------------- */
 import { defineStore } from 'pinia'
+import { buildMarketRadarMessages, scheduleMarketRadarStream, abortMarketRadarStream } from '@/api/mock'
 
 let _id = 1
 const newId = () => `msg-${Date.now().toString(36)}-${_id++}`
@@ -163,21 +164,66 @@ export const useChatStore = defineStore('chat', {
     history: MOCK_HISTORY,
     /** 思考中（用于打字 dots） */
     thinking: false,
+    /* ============ 市场商机分析员专用 state（B.4）============
+     * 这些字段对其他员工完全无意义，但为了避免给 chat store 加 employee 判别
+     * 拆分的复杂度，统一在 store 维护；其他员工的 v-if 永远不读取它们
+     */
+    /** 当前会话已绑定的知识库条目 id 列表（来自 KnowledgeBindDrawer） */
+    boundDocs: [],
+    /** 工具箱折叠状态（侧栏顶部） */
+    toolboxOpen: false,
+    /** 数据源设置弹窗开关 */
+    dataSourceDialogOpen: false,
+    /** 消息推送设置弹窗开关 */
+    pushDialogOpen: false,
+    /** 知识库绑定抽屉开关 */
+    knowledgeDrawerOpen: false,
   }),
 
   actions: {
     openChat(emp) {
       if (!emp) return
+      // 先清理上一位员工的流式任务 + 弹窗状态，避免残留
+      abortMarketRadarStream()
       this.employee = emp
-      // 加载多轮对话 mock：保留初始问候，再追加典型业务对话
-      this.messages = [
-        ...buildInitialMessages(emp),
-        ...MOCK_DIALOG,
-      ]
+
+      if (emp?.id === 'market-radar-001') {
+        /* ============ 市场商机分析员（A.2 / D.2）============ */
+        this.messages = [
+          ...buildInitialMessages(emp),
+          ...buildMarketRadarMessages(emp.defaultQuery),
+        ]
+        /* 首次进入市场商机分析员时预绑定 3 篇默认知识库，使 [n] 引用上标可渲染
+         *  - 后续用户可在工具栏打开 KnowledgeBindDrawer 自由调整
+         *  - 若用户已绑定过（boundDocs 非空），保留其选择不重置
+         */
+        if (!this.boundDocs || this.boundDocs.length === 0) {
+          this.bindDocs(['mr-doc-1', 'mr-doc-3', 'mr-doc-5'])
+        }
+        /* 启动 4 步 process_card 流式切换 */
+        const card = this.messages.find((m) => m.who === 'process_card')
+        if (card) {
+          // 必须在 setTimeout 中启动，确保 message 已渲染到 DOM
+          setTimeout(() => scheduleMarketRadarStream(this, card.id), 50)
+        }
+      } else {
+        /* ============ 其他员工（行为不变）============ */
+        this.messages = [
+          ...buildInitialMessages(emp),
+          ...MOCK_DIALOG,
+        ]
+      }
       this.open = true
       // 锁滚动 + esc 关闭
       try { document.body.style.overflow = 'hidden' } catch (e) { /* noop */ }
     },
+    /* ============ 市场商机分析员专用 actions（B.4）============ */
+    setToolboxOpen(v)       { this.toolboxOpen = !!v },
+    setDataSourceOpen(v)    { this.dataSourceDialogOpen = !!v },
+    setPushOpen(v)          { this.pushDialogOpen = !!v },
+    setKnowledgeDrawerOpen(v){ this.knowledgeDrawerOpen = !!v },
+    bindDocs(docIds)        { this.boundDocs = Array.isArray(docIds) ? docIds.slice() : [] },
+    unbindDoc(docId)        { this.boundDocs = this.boundDocs.filter((d) => d !== docId) },
     send(text) {
       const value = String(text || '').trim()
       if (!value) return

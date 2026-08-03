@@ -8,6 +8,8 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { dispatch } from './mock'
+// 确保 mock 路由（如 POST /auth/login）在拦截器使用前完成注册
+import './auth'
 
 const http = axios.create({
   baseURL: '/api',

@@ -489,7 +489,7 @@ registerRoute('PUT /knowledge-bases', {
     }
     if (body.description !== undefined) kb.description = body.description
     if (body.visibility !== undefined) {
-      if (!['private', 'organization', 'public'].includes(body.visibility)) {
+      if (!['private', 'public'].includes(body.visibility)) {
         throw new Error('非法的可见性选项')
       }
       kb.visibility = body.visibility

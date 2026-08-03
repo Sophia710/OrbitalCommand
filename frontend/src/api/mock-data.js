@@ -144,6 +144,30 @@ const EMPLOYEES = [
   { id: 'emp_004', kind: 'professional', domain: '全链路',   name: '全链路编排员',     avatar: '#f59e0b', accent: '#fde047', tags: ['测控编排', '故障定位', '报告生成'], description: '编排跨域测试、跨域数据关联、根因分析、运维剧本自动执行。',                       skills: ['测控编排', '故障定位'], publisher: 'AEROS', status: 'published', version: '4.2.0', usage: 15320, rating: 5.0, reviews: 312, createdAt: NOW - 60*DAY },
   { id: 'emp_009', kind: 'professional', domain: '星地链路', name: '干扰分析员',   avatar: '#d946ef', accent: '#f0abfc', tags: ['干扰分析', '频谱分析'],         description: '频谱监测、干扰源定位、信号质量评估，输出干扰处理建议。',                         skills: ['频谱分析', '干扰分析'], publisher: '运控中心',     status: 'rejected', version: '0.3.0', usage: 0,     rating: 0,   reviews: 0,   createdAt: NOW - 1*DAY },
   { id: 'emp_011', kind: 'professional', domain: '终端',     name: '终端管理助理',             avatar: '#fbbf24', accent: '#fde047', tags: ['OTA 升级', '终端验证'],         description: '终端批量管理、灰度发布、配置下发、健康监控。',                                   skills: ['OTA 升级', '终端验证'], publisher: '运控中心', status: 'published', version: '2.0.0', usage: 6210, rating: 4.8, reviews: 92, createdAt: NOW - 12*DAY },
+
+  /* ============ 专业员工 · 市场商机分析员（按实施计划 A.1 注入）============
+   * 约束：仅追加，不修改任何已有员工字段；通过 id 唯一识别（isMarketRadar） */
+  {
+    id: 'market-radar-001',
+    kind: 'professional',
+    domain: '市场情报',
+    name: '市场商机分析员',
+    /* avatar 必须是色值（与 accent 一致），与 .chat-main__agent-avatar 的 linear-gradient(--c1, --c2) 兼容 */
+    avatar: '#a78bfa',
+    accent: '#8b5cf6',
+    tags: ['客户洞察', '标讯跟踪', '竞品分析', '政策解读', '行业动态'],
+    description: '7×24 监控全网商机信号，基于公司知识库研判，输出可执行的情报建议。',
+    skills: ['标讯跟踪', '竞品分析', '政策解读'],
+    publisher: 'AEROS',
+    status: 'published',
+    version: '1.0.0',
+    usage: 0,
+    rating: 5.0,
+    reviews: 0,
+    createdAt: NOW - 1*DAY,
+    /* 实施计划约定的扩展字段（不污染其他员工） */
+    defaultQuery: '用自然语言描述您想查询的标讯信息，如：帮我找近期遥感领域的招标公告',
+  },
 ]
 
 const MY_EMPLOYEES = EMPLOYEES.slice(0, 5).map((e) => ({ ...e, hiredAt: NOW - 2 * DAY, source: 'subscribed' }))
@@ -245,19 +269,18 @@ const SKILLS_FULL = SKILL_TEMPLATES.map((t, i) => {
 })
 
 /* ============================================================
- * 智能中心 · 知识库(含个人知识库 + 团队知识库)
+ * 智能中心 · 知识库(含私有 / 公开两类可见性)
  * ------------------------------------------------------------
  *  与后端 knowledge_bases + documents schema 严格对齐
  *    kb.id / name / description / visibility / document_count
  *       / creator_name / created_at / updated_at
  *    doc.id / knowledge_base_id / filename / format / size_bytes
  *       / parse_status / uploader_name / upload_time
- *  visibility: private(个人) | public(公开) | organization(团队)
+ *  visibility: private(私有) | public(公开)
  *  parse_status: pending | parsing | completed | failed
  * ============================================================ */
 const VISIBILITY_LABELS = {
-  private:     { key: 'private',     label: '个人',     tone: 'tone-purple' },
-  organization:{ key: 'organization',label: '团队',     tone: 'tone-blue'   },
+  private:     { key: 'private',     label: '私有',     tone: 'tone-purple' },
   public:      { key: 'public',      label: '公开',     tone: 'tone-green'  },
 }
 const KNOWLEDGE_BASE_CATEGORIES = [
@@ -270,23 +293,23 @@ const KNOWLEDGE_BASE_CATEGORIES = [
   { key: 'custom',     name: '通用自定义', icon: 'custom',     color: '#6b7280' },
 ]
 const KNOWLEDGE_BASES = [
-  { id: 'kb-001', name: '协议规范库',           description: '收录卫星通信领域国际标准(ITU-R)、行业标准及企业内部规范文档。', visibility: 'organization', category: 'protocol', document_count: 142, color_theme: '#5b8def', tags: ['ITU-R', '3GPP', 'CCSDS'], creator_name: 'Alex Chen', created_at: '2025-09-12 09:30', updated_at: '2026-06-18 14:22' },
+  { id: 'kb-001', name: '协议规范库',           description: '收录卫星通信领域国际标准(ITU-R)、行业标准及企业内部规范文档。', visibility: 'public',      category: 'protocol', document_count: 142, color_theme: '#5b8def', tags: ['ITU-R', '3GPP', 'CCSDS'], creator_name: 'Alex Chen', created_at: '2025-09-12 09:30', updated_at: '2026-06-18 14:22' },
   { id: 'kb-002', name: '测试报告归档',         description: '历次终端入网测试、网络性能测试、载荷验证测试的报告汇总与分析。', visibility: 'private',     category: 'test',     document_count: 856, color_theme: '#16a34a', tags: ['回归', '验收', '压测'],       creator_name: 'Alex Chen', created_at: '2025-04-03 11:08', updated_at: '2026-06-20 08:55' },
   { id: 'kb-003', name: '系统设计文档',         description: '总体架构设计、各分系统接口定义、部署运维手册等技术文档。',       visibility: 'public',      category: 'design',   document_count:  45, color_theme: '#8b5cf6', tags: ['架构', '接口', '部署'],         creator_name: 'Alex Chen', created_at: '2025-06-21 16:42', updated_at: '2026-05-30 10:14' },
   { id: 'kb-004', name: '运维剧本与故障处置',   description: '高发故障的处置剧本、回滚方案、应急操作流程。',                   visibility: 'private',     category: 'ops',      document_count:  78, color_theme: '#f59e0b', tags: ['故障', '回滚', '应急'],         creator_name: 'Alex Chen', created_at: '2025-11-08 13:21', updated_at: '2026-06-21 17:09' },
-  { id: 'kb-005', name: '终端入网评测记录',     description: '手机直连、CPE、模组等终端的入网评测原始记录与日志。',           visibility: 'organization', category: 'test',     document_count: 234, color_theme: '#16a34a', tags: ['CPE', '模组', '入网'],         creator_name: 'Alex Chen', created_at: '2025-07-19 10:55', updated_at: '2026-06-17 09:30' },
-  { id: 'kb-006', name: '星地链路损伤样本',     description: '历年雨衰、大气闪烁、多普勒频移的实测样本与参数库。',             visibility: 'organization', category: 'training', document_count: 167, color_theme: '#ec4899', tags: ['雨衰', '闪烁', '多普勒'],       creator_name: 'Alex Chen', created_at: '2025-08-25 14:11', updated_at: '2026-06-15 11:48' },
+  { id: 'kb-005', name: '终端入网评测记录',     description: '手机直连、CPE、模组等终端的入网评测原始记录与日志。',           visibility: 'public', category: 'test',     document_count: 234, color_theme: '#16a34a', tags: ['CPE', '模组', '入网'],         creator_name: 'Alex Chen', created_at: '2025-07-19 10:55', updated_at: '2026-06-17 09:30' },
+  { id: 'kb-006', name: '星地链路损伤样本',     description: '历年雨衰、大气闪烁、多普勒频移的实测样本与参数库。',             visibility: 'public', category: 'training', document_count: 167, color_theme: '#ec4899', tags: ['雨衰', '闪烁', '多普勒'],       creator_name: 'Alex Chen', created_at: '2025-08-25 14:11', updated_at: '2026-06-15 11:48' },
   { id: 'kb-007', name: '载荷 AI 模型仓库',     description: '在轨 AI 推理模型的版本仓库、训练样本与评估报告。',               visibility: 'private',     category: 'training', document_count:  56, color_theme: '#ec4899', tags: ['AI', 'INT8', '在轨'],           creator_name: 'Alex Chen', created_at: '2025-12-04 09:18', updated_at: '2026-06-19 16:02' },
-  { id: 'kb-008', name: '安全攻防演练归档',     description: '红蓝对抗演练的攻击向量、复盘报告与修复记录。',                   visibility: 'organization', category: 'security', document_count:  42, color_theme: '#f25c54', tags: ['红蓝', '漏洞', '复盘'],         creator_name: 'Alex Chen', created_at: '2025-10-30 15:34', updated_at: '2026-06-12 13:55' },
+  { id: 'kb-008', name: '安全攻防演练归档',     description: '红蓝对抗演练的攻击向量、复盘报告与修复记录。',                   visibility: 'public', category: 'security', document_count:  42, color_theme: '#f25c54', tags: ['红蓝', '漏洞', '复盘'],         creator_name: 'Alex Chen', created_at: '2025-10-30 15:34', updated_at: '2026-06-12 13:55' },
   { id: 'kb-009', name: '运维值班周报',         description: '运控中心值班人员产出的周报、运行趋势与异常摘要。',               visibility: 'private',     category: 'ops',      document_count: 128, color_theme: '#f59e0b', tags: ['周报', 'SLA', '趋势'],         creator_name: 'Alex Chen', created_at: '2025-03-17 08:42', updated_at: '2026-06-21 18:01' },
   { id: 'kb-010', name: '客户支持知识库',       description: '面向客户与现场支持人员的常见问题与答复库。',                     visibility: 'public',      category: 'custom',   document_count:  89, color_theme: '#6b7280', tags: ['FAQ', '客户', '支持'],         creator_name: 'Alex Chen', created_at: '2025-05-29 11:24', updated_at: '2026-06-10 09:33' },
-  { id: 'kb-011', name: '验收与回归测试用例',   description: '终端 / 网络 / 载荷 / 全链路的回归与验收测试用例集合。',           visibility: 'organization', category: 'test',     document_count: 312, color_theme: '#16a34a', tags: ['回归', '验收', '用例集'],       creator_name: 'Alex Chen', created_at: '2025-06-08 14:50', updated_at: '2026-06-22 08:15' },
-  { id: 'kb-012', name: '频谱监测与干扰样本',   description: '全网频谱监测的原始数据、干扰源识别结果与处置记录。',             visibility: 'organization', category: 'training', document_count: 198, color_theme: '#ec4899', tags: ['频谱', '干扰', '识别'],         creator_name: 'Alex Chen', created_at: '2025-09-22 16:08', updated_at: '2026-06-18 19:42' },
+  { id: 'kb-011', name: '验收与回归测试用例',   description: '终端 / 网络 / 载荷 / 全链路的回归与验收测试用例集合。',           visibility: 'public', category: 'test',     document_count: 312, color_theme: '#16a34a', tags: ['回归', '验收', '用例集'],       creator_name: 'Alex Chen', created_at: '2025-06-08 14:50', updated_at: '2026-06-22 08:15' },
+  { id: 'kb-012', name: '频谱监测与干扰样本',   description: '全网频谱监测的原始数据、干扰源识别结果与处置记录。',             visibility: 'public', category: 'training', document_count: 198, color_theme: '#ec4899', tags: ['频谱', '干扰', '识别'],         creator_name: 'Alex Chen', created_at: '2025-09-22 16:08', updated_at: '2026-06-18 19:42' },
   { id: 'kb-013', name: '星载软件升级记录',     description: '星载软件在轨升级的版本、操作窗口、回归结果汇总。',               visibility: 'private',     category: 'ops',      document_count:  64, color_theme: '#f59e0b', tags: ['升级', '在轨', '回归'],         creator_name: 'Alex Chen', created_at: '2025-11-30 10:14', updated_at: '2026-06-19 12:20' },
   { id: 'kb-014', name: '运维 SOP 模板库',      description: '标准运维流程(SOP)与最佳实践模板,可快速复用。',                 visibility: 'public',      category: 'ops',      document_count:  38, color_theme: '#f59e0b', tags: ['SOP', '流程', '模板'],         creator_name: 'Alex Chen', created_at: '2025-04-18 09:55', updated_at: '2026-05-28 17:30' },
   { id: 'kb-015', name: '项目交付文档',         description: '重点项目的设计、交付、验收、培训材料汇总。',                     visibility: 'private',     category: 'design',   document_count: 156, color_theme: '#8b5cf6', tags: ['交付', '验收', '培训'],         creator_name: 'Alex Chen', created_at: '2025-02-12 14:40', updated_at: '2026-06-16 10:22' },
   { id: 'kb-016', name: '客户案例与最佳实践',   description: '标杆客户的实施案例、复盘与最佳实践总结。',                       visibility: 'public',      category: 'custom',   document_count:  52, color_theme: '#6b7280', tags: ['案例', '最佳实践', '复盘'],       creator_name: 'Alex Chen', created_at: '2025-10-15 11:38', updated_at: '2026-06-14 15:17' },
-  { id: 'kb-017', name: '应急响应剧本',         description: '面向重大故障、突发事件的应急响应剧本与升级机制。',               visibility: 'organization', category: 'ops',      document_count:  29, color_theme: '#f59e0b', tags: ['应急', '故障', '升级'],         creator_name: 'Alex Chen', created_at: '2025-08-08 16:22', updated_at: '2026-06-11 14:05' },
+  { id: 'kb-017', name: '应急响应剧本',         description: '面向重大故障、突发事件的应急响应剧本与升级机制。',               visibility: 'public', category: 'ops',      document_count:  29, color_theme: '#f59e0b', tags: ['应急', '故障', '升级'],         creator_name: 'Alex Chen', created_at: '2025-08-08 16:22', updated_at: '2026-06-11 14:05' },
   { id: 'kb-018', name: '研发实验记录',         description: '研发阶段的实验设计、过程数据与结论记录。',                       visibility: 'private',     category: 'training', document_count:  87, color_theme: '#ec4899', tags: ['实验', '数据', '结论'],         creator_name: 'Alex Chen', created_at: '2025-07-30 13:12', updated_at: '2026-06-22 09:48' },
 ]
 

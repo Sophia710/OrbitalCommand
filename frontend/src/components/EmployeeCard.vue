@@ -24,7 +24,7 @@
         <span>{{ initial }}</span>
         <span v-if="employee.status === 'pending'" class="emp-card__status">审核中</span>
         <span v-else-if="employee.status === 'rejected'" class="emp-card__status is-reject">已驳回</span>
-        <span v-else-if="employee.status === 'draft'" class="emp-card__status is-draft">草稿</span>
+        <span v-else-if="employee.status === 'draft'" class="emp-card__status is-draft">已保存</span>
       </div>
       <div class="emp-card__title">
         <div class="emp-card__name" :title="employee.name">{{ employee.name }}</div>
