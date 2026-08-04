@@ -124,8 +124,6 @@ registerRoute('GET /employees/my-drafts', {
   handler: ({ params } = {}) => {
     let list = [...MOCK.myDrafts]
     if (params?.status) list = list.filter(d => d.status === params.status)
-    // 倒序:最新编辑的在前
-    list.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt))
     return { list, total: list.length }
   },
 })
@@ -180,6 +178,20 @@ registerRoute('POST /employees/:id/activate', {
   },
 })
 
+/* ------------ 下架（已发布 → 已下架） ------------ */
+registerRoute('POST /employees/:id/takedown', {
+  handler: ({ pathParams } = {}) => {
+    const i = MOCK.myDrafts.findIndex(e => e.id === pathParams.id)
+    if (i < 0) throw new Error('员工不存在')
+    if (MOCK.myDrafts[i].status !== 'published') {
+      throw new Error('仅已发布状态的员工可下架')
+    }
+    MOCK.myDrafts[i].status = 'offline'
+    MOCK.myDrafts[i].updatedAt = Date.now()
+    return MOCK.myDrafts[i]
+  },
+})
+
 /* ------------ 删除草稿 ------------ */
 registerRoute('POST /employees/my-drafts/delete', {
   body: { id: ['string', true] },
@@ -206,6 +218,7 @@ export function getMyDraft(id)           { return http.get(`/employees/my-drafts
 export function updateEmployee(payload)  { return http.post('/employees/update', payload) }
 export function submitEmployee(id)       { return http.post(`/employees/${id}/submit`) }
 export function activateEmployee(id)     { return http.post(`/employees/${id}/activate`) }
+export function takedownEmployee(id)     { return http.post(`/employees/${id}/takedown`) }
 export function deleteMyDraft(id)        { return http.post('/employees/my-drafts/delete', { id }) }
 export function listSkills()             { return http.get('/employees/skills') }
 export function listSuperSeries()        { return Promise.resolve(MOCK.superSeries || []) }

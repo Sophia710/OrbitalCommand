@@ -62,7 +62,6 @@
               <th class="col-domain">领域</th>
               <th class="col-time">创建时间</th>
               <th class="col-status">状态</th>
-              <th class="col-activated">激活状态</th>
               <th class="col-actions">操作</th>
             </tr>
           </thead>
@@ -90,17 +89,9 @@
               <td class="col-status">
                 <span class="status-chip" :class="`status-chip--${d.status}`">{{ statusLabel(d.status) }}</span>
               </td>
-              <td class="col-activated">
-                <span v-if="d.activated" class="activated-chip is-on">
-                  <span class="activated-dot" />已激活
-                </span>
-                <span v-else class="activated-chip is-off">
-                  <span class="activated-dot" />未激活
-                </span>
-              </td>
               <td class="col-actions">
                 <div class="row-actions">
-                  <button class="row-action" title="编辑" @click="onEdit(d)">
+                  <button v-if="d.status !== 'published'" class="row-action" title="编辑" @click="onEdit(d)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
                     </svg>
@@ -117,6 +108,18 @@
                       <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                     </svg>
                     提交
+                  </button>
+                  <button v-if="d.status === 'offline'" class="row-action" title="重新提交" @click="onSubmitOne(d)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    提交
+                  </button>
+                  <button v-if="d.status === 'published'" class="row-action row-action--warn" title="下架" @click="onTakedown(d)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 12H5"/>
+                    </svg>
+                    下架
                   </button>
                   <button v-if="d.status !== 'published'" class="row-action row-action--danger" title="删除" @click="onDelete(d)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -286,8 +289,10 @@ import {
   updateEmployee,
   submitEmployee,
   activateEmployee,
+  takedownEmployee,
   deleteMyDraft,
 } from '@/api/employees'
+import { ElMessageBox } from 'element-plus'
 import { useToastStore } from '@/stores/toast'
 import { useChatStore } from '@/stores/chat'
 import EmptyState from '@/components/EmptyState.vue'
@@ -342,6 +347,7 @@ const stats = computed(() => {
     pending:   all.filter(d => d.status === 'pending').length,
     published: all.filter(d => d.status === 'published').length,
     rejected:  all.filter(d => d.status === 'rejected').length,
+    offline:   all.filter(d => d.status === 'offline').length,
   }
 })
 
@@ -381,7 +387,6 @@ const emptyForm = () => ({
   description: '',
   tags: [],
   status: 'draft',
-  activated: false,
   version: '0.1.0',
   createdAt: 0,
 })
@@ -457,6 +462,7 @@ function statusLabel(s) {
     draft:     '已保存',
     pending:   '审核中',
     published: '已发布',
+    offline:   '已下架',
     rejected:  '已驳回',
   })[s] || '—'
 }
@@ -499,7 +505,6 @@ async function onEdit(d) {
         description: data.description || '',
         tags: Array.isArray(data.tags) ? [...data.tags] : [],
         status: data.status || 'draft',
-        activated: !!data.activated,
         version: data.version || '0.1.0',
         createdAt: data.createdAt || 0,
       }
@@ -521,6 +526,25 @@ async function onSubmitOne(d) {
     await loadDrafts()
   } catch (e) {
     toast.error('提交失败：' + (e?.message || '未知错误'))
+  }
+}
+
+async function onTakedown(d) {
+  try {
+    await ElMessageBox.confirm(
+      `确认下架「${d.name}」？下架后将无法被其他人使用，可稍后重新提交。`,
+      '下架确认',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' },
+    )
+  } catch {
+    return
+  }
+  try {
+    await takedownEmployee(d.id)
+    toast.success(`「${d.name}」已下架`)
+    await loadDrafts()
+  } catch (e) {
+    toast.error('下架失败：' + (e?.message || '未知错误'))
   }
 }
 
@@ -725,7 +749,6 @@ async function syncFromRoute(targetRoute) {
         description: d.description || '',
         tags: Array.isArray(d.tags) ? [...d.tags] : [],
         status: d.status || 'draft',
-        activated: !!d.activated,
         version: d.version || '0.1.0',
         createdAt: d.createdAt || 0,
       }
@@ -748,7 +771,6 @@ async function syncFromRoute(targetRoute) {
         tags: Array.isArray(src.tags) ? [...src.tags] : [],
         visibility: 'public',
         status: 'draft',
-        activated: false,
       }
       snapshotForm()
       isDirty.value = false
@@ -946,9 +968,8 @@ onBeforeUnmount(() => {
 .col-name    { width: 28%; min-width: 220px; }
 .col-domain  { width: 10%; min-width: 80px; }
 .col-time    { width: 16%; min-width: 160px; }
-.col-status  { width: 10%; min-width: 90px; }
-.col-activated { width: 10%; min-width: 100px; }
-.col-actions { width: 26%; min-width: 240px; }
+.col-status  { width: 12%; min-width: 100px; }
+.col-actions { width: 28%; min-width: 240px; }
 
 .emp-cell {
   display: flex;
@@ -1030,26 +1051,9 @@ onBeforeUnmount(() => {
 .status-chip--pending   { background: rgba(251, 191, 36, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
 .status-chip--published { background: rgba(74, 222, 128, 0.12); color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
 .status-chip--rejected  { background: rgba(248, 113, 113, 0.12); color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+.status-chip--offline   { background: rgba(148, 163, 184, 0.14); color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); }
 
-/* 激活状态 */
-.activated-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-family: var(--font-mono);
-  font-weight: 500;
-}
-.activated-chip.is-on  { color: #4ade80; }
-.activated-chip.is-off { color: var(--ink-3); }
-.activated-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.activated-chip.is-on  .activated-dot { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
-.activated-chip.is-off .activated-dot { background: var(--ink-3); }
+/* ============ 激活状态相关样式已删除：列表不再展示"激活状态"列 ============ */
 
 /* 行操作按钮 */
 .row-actions {
@@ -1089,6 +1093,16 @@ onBeforeUnmount(() => {
   color: var(--danger);
   border-color: var(--danger);
   background: rgba(248, 113, 113, 0.08);
+}
+.row-action--warn {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.06);
+}
+.row-action--warn:hover {
+  color: #f59e0b;
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.14);
 }
 
 /* ============================================================

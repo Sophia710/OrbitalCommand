@@ -23,7 +23,6 @@
       >
         <span>{{ initial }}</span>
         <span v-if="employee.status === 'pending'" class="emp-card__status">审核中</span>
-        <span v-else-if="employee.status === 'rejected'" class="emp-card__status is-reject">已驳回</span>
         <span v-else-if="employee.status === 'draft'" class="emp-card__status is-draft">已保存</span>
       </div>
       <div class="emp-card__title">
@@ -321,10 +320,7 @@ function formatCalls(n) {
   color: #1f1300;
   border: 1px solid rgba(0, 0, 0, 0.25);
 }
-.emp-card__status.is-reject {
-  background: var(--danger);
-  color: #fff;
-}
+
 .emp-card__status.is-draft {
   background: var(--ink-3);
   color: #0a0c18;

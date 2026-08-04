@@ -73,12 +73,7 @@
               </svg>
               发布任务
             </button>
-            <button class="btn btn--ghost" @click="onEdit(e)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-              </svg>
-              编辑
-            </button>
+            
             <button class="btn btn--ghost is-danger" @click="onRelease(e)" title="解雇">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -149,17 +144,6 @@ function formatNumber(n) {
 function onChat(emp) {
   // 打开全局对话抽屉（与 prototype copy 的 openChat 行为一致）
   chat.openChat(emp)
-}
-
-function onEdit(emp) {
-  // 区分两种场景：
-  //  1) 我创建的草稿（source === 'mine' 或 publisher === '当前用户'）→ 直接编辑该草稿
-  //  2) 已订阅员工（source === 'subscribed'）→ 跳转到创建员工页，以"克隆"方式作为新草稿二次编辑
-  if (isMine(emp)) {
-    router.push({ path: '/create', query: { id: emp.id, from: 'my' } })
-  } else {
-    router.push({ path: '/create', query: { clone: emp.id, from: 'my' } })
-  }
 }
 
 async function onRelease(emp) {
