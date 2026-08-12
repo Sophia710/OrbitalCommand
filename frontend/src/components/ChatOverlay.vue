@@ -18,7 +18,7 @@
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-          <div class="chat-sidebar__title">历史任务</div>
+          <div class="chat-sidebar__title">{{ isMarketRadar ? '历史对话' : '历史任务' }}</div>
           <button
             class="iconbtn iconbtn--accent"
             aria-label="新建会话"
@@ -68,19 +68,37 @@
             <button
               type="button"
               class="chat-sidebar__toolbox-entry"
-              @click="openDataSourceDialog"
+              @click="openBidAggregation"
             >
-              <span class="chat-sidebar__toolbox-emoji">📡</span>
-              <span class="chat-sidebar__toolbox-entry-label">数据源设置</span>
+              <span class="chat-sidebar__toolbox-emoji">📊</span>
+              <span class="chat-sidebar__toolbox-entry-label">标讯汇聚</span>
               <span class="chat-sidebar__toolbox-arrow">→</span>
             </button>
             <button
               type="button"
               class="chat-sidebar__toolbox-entry"
-              @click="openPushDialog"
+              @click="openBidAnalysis"
             >
-              <span class="chat-sidebar__toolbox-emoji">🔔</span>
-              <span class="chat-sidebar__toolbox-entry-label">消息推送</span>
+              <span class="chat-sidebar__toolbox-emoji">🔍</span>
+              <span class="chat-sidebar__toolbox-entry-label">标讯分析</span>
+              <span class="chat-sidebar__toolbox-arrow">→</span>
+            </button>
+            <button
+              type="button"
+              class="chat-sidebar__toolbox-entry"
+              @click="openDataSourcePanel"
+            >
+              <span class="chat-sidebar__toolbox-emoji">📡</span>
+              <span class="chat-sidebar__toolbox-entry-label">数据源管理</span>
+              <span class="chat-sidebar__toolbox-arrow">→</span>
+            </button>
+            <button
+              type="button"
+              class="chat-sidebar__toolbox-entry"
+              @click="openDomainConfig"
+            >
+              <span class="chat-sidebar__toolbox-emoji">🎯</span>
+              <span class="chat-sidebar__toolbox-entry-label">领域专业化配置</span>
               <span class="chat-sidebar__toolbox-arrow">→</span>
             </button>
           </div>
@@ -89,9 +107,77 @@
 
       <!-- 主区：左对话 + 右面板 -->
       <section class="chat-main" :class="{ 'is-panel-open': panelOpen }">
-        <!-- 左：对话内容 -->
+        <!-- 左：对话内容 / 数据源管理面板（内联，仅市场商机分析员） -->
         <div class="chat-content">
-          <header class="chat-main__head">
+          <DataSourcePanel
+            v-if="isMarketRadar && activePanel === 'datasource'"
+            @close="closePanel"
+          />
+          <BidAggregationPanel
+            v-else-if="isMarketRadar && activePanel === 'bidagg'"
+            @close="closePanel"
+          />
+          <DomainConfigPanel
+            v-else-if="isMarketRadar && activePanel === 'domaincfg'"
+            @close="closePanel"
+          />
+          <BidAnalysisPanel
+            v-else-if="isMarketRadar && activePanel === 'bidanalysis'"
+            @close="closePanel"
+          />
+          <template v-else>
+            <!-- 欢迎页（无消息时居中显示） -->
+            <div v-if="!chat.messages.length" class="chat-welcome">
+              <div class="chat-welcome__title">{{ chat.employee?.name || '数字员工' }}</div>
+              <div class="chat-welcome__subtitle">请描述您的任务需求</div>
+              <div class="chat-welcome__input">
+                <div class="chat-input__box" :class="{ 'is-empty': !canSend, 'is-focus': isInputFocus }">
+                  <div class="chat-input__field">
+                    <textarea ref="textareaEl" v-model="input" rows="1" :placeholder="placeholderText" :disabled="chat.thinking" :aria-label="chat.thinking ? 'AI 正在回复中' : '对话输入'" @keydown.enter.exact.prevent="onSend" @keydown.shift.enter.exact.stop @input="onInput" @focus="isInputFocus = true" @blur="isInputFocus = false" />
+                  </div>
+                  <div class="chat-input__row">
+                    <div class="chat-input__tools">
+                      <button type="button" class="chat-input__tool" :class="{ 'is-disabled': chat.thinking }" :disabled="chat.thinking" aria-label="上传文件" title="上传文件" @click="triggerFile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
+                      </button>
+                      <input ref="fileInputEl" type="file" class="chat-input__file-input" multiple :accept="ACCEPTED_EXTS.join(',')" @change="onFilePick" />
+                      <button type="button" class="chat-input__tool chat-input__tool--bind" :class="{ 'is-disabled': chat.thinking }" :disabled="chat.thinking" aria-label="绑定知识库" title="绑定知识库" @click="openKnowledgeDrawer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                        <span v-if="boundDocCount" class="chat-input__tool-badge">{{ boundDocCount }}</span>
+                      </button>
+                      <button type="button" class="chat-input__tool" :class="{ 'is-recording': voiceState === 'recording', 'is-disabled': chat.thinking }" :disabled="chat.thinking || !speechSupported" :aria-label="voiceState === 'recording' ? '停止录音' : '语音输入'" :title="!speechSupported ? '当前浏览器不支持语音识别' : (voiceState === 'recording' ? '停止录音' : '语音输入')" @click="toggleVoice">
+                        <svg v-if="voiceState === 'recording'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="6" y="6" width="12" height="12" rx="2" />
+                        </svg>
+                        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+                        </svg>
+                        <span v-if="voiceState === 'recording'" class="chat-input__rec-pulse" />
+                      </button>
+                    </div>
+                    <div class="chat-input__send">
+                      <button type="button" class="chat-input__tool chat-input__enhance" :class="{ 'is-disabled': chat.thinking || !input.trim() }" :disabled="chat.thinking || !input.trim()" title="增强提示词" @click="enhancePrompt">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+                        </svg>
+                      </button>
+                      <button type="button" class="chat-send" :class="{ 'is-disabled': !canSend }" :disabled="!canSend" @click="onSend">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <header v-else class="chat-main__head">
             <div class="chat-main__agent">
               <div
                 class="chat-main__agent-avatar"
@@ -99,11 +185,12 @@
               >{{ agentInitial }}</div>
               <div>
                 <div class="chat-main__agent-name">{{ chat.employee?.name || '' }}</div>
-                <div class="chat-main__agent-status">● 在线 · 推理中</div>
+                <div class="chat-main__agent-status">● 在线 </div>
               </div>
             </div>
             <div class="chat-main__actions">
               <button
+                v-if="!isMarketRadar"
                 class="iconbtn"
                 :class="{ 'is-active': panelOpen }"
                 type="button"
@@ -202,6 +289,10 @@
                     <ul v-else-if="b.kind === 'ul'" class="chat-md__ul">
                       <li v-for="(it, k) in b.items" :key="k" v-html="renderInline(it)" />
                     </ul>
+                    <table v-else-if="b.kind === 'table'" class="chat-md__table">
+                      <thead><tr><th v-for="(h, k) in b.headers" :key="k" v-html="renderInline(h)" /></tr></thead>
+                      <tbody><tr v-for="(row, ri) in b.rows" :key="ri"><td v-for="(cell, ci) in row" :key="ci" v-html="renderInline(cell)" /></tr></tbody>
+                    </table>
                   </template>
                 </div>
                 <div v-if="m.actions" class="chat-md__foot">
@@ -298,7 +389,7 @@
           </div>
 
           <!-- 输入框 -->
-          <form class="chat-input" @submit.prevent="onSend">
+          <form v-if="chat.messages.length" class="chat-input" @submit.prevent="onSend">
             <!-- 已上传文件预览列表 -->
             <div v-if="uploadedFiles.length" class="chat-input__files">
               <div
@@ -360,68 +451,6 @@
                 'is-focus': isInputFocus,
               }"
             >
-              <div class="chat-input__tools">
-                <button
-                  type="button"
-                  class="chat-input__tool"
-                  :class="{ 'is-disabled': chat.thinking }"
-                  :disabled="chat.thinking"
-                  aria-label="上传文件"
-                  title="上传文件"
-                  @click="triggerFile"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                  </svg>
-                </button>
-                <input
-                  ref="fileInputEl"
-                  type="file"
-                  class="chat-input__file-input"
-                  multiple
-                  :accept="ACCEPTED_EXTS.join(',')"
-                  @change="onFilePick"
-                />
-                <!-- ============ 知识库绑定按钮（仅市场商机分析员 · B.3）============ -->
-                <button
-                  v-if="isMarketRadar"
-                  type="button"
-                  class="chat-input__tool chat-input__tool--bind"
-                  :class="{ 'is-disabled': chat.thinking, 'is-bound': boundDocCount > 0 }"
-                  :disabled="chat.thinking"
-                  :aria-label="boundDocCount ? `已绑定 ${boundDocCount} 篇知识库` : '绑定知识库'"
-                  :title="boundDocCount ? `已绑定 ${boundDocCount} 篇知识库 · 点击管理` : '绑定知识库'"
-                  @click="openKnowledgeDrawer"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <path d="M9 13h6M9 17h4" />
-                  </svg>
-                  <span v-if="boundDocCount" class="chat-input__tool-badge">{{ boundDocCount }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="chat-input__tool"
-                  :class="{
-                    'is-recording': voiceState === 'recording',
-                    'is-disabled': chat.thinking,
-                  }"
-                  :disabled="chat.thinking || !speechSupported"
-                  :aria-label="voiceState === 'recording' ? '停止录音' : '语音输入'"
-                  :title="!speechSupported ? '当前浏览器不支持语音识别' : (voiceState === 'recording' ? '停止录音' : '语音输入')"
-                  @click="toggleVoice"
-                >
-                  <svg v-if="voiceState === 'recording'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="6" y="6" width="12" height="12" rx="2" />
-                  </svg>
-                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
-                  </svg>
-                  <span v-if="voiceState === 'recording'" class="chat-input__rec-pulse" />
-                </button>
-              </div>
               <div class="chat-input__field">
                 <textarea
                   ref="textareaEl"
@@ -448,32 +477,115 @@
                   正在识别语音…
                 </div>
               </div>
-              <!-- 发送 / 终止 按钮 -->
-              <button
-                v-if="!chat.thinking"
-                type="submit"
-                class="chat-send"
-                :class="{ 'is-disabled': !canSend }"
-                :disabled="!canSend"
-                :aria-label="canSend ? '发送' : '请先输入内容'"
-                :title="canSend ? '发送' : '请先输入内容'"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
-                </svg>
-              </button>
-              <button
-                v-else
-                type="button"
-                class="chat-send chat-send--abort"
-                aria-label="终止生成"
-                title="终止生成"
-                @click="onAbort"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="6" y="6" width="12" height="12" rx="1.5" />
-                </svg>
-              </button>
+              <div class="chat-input__row">
+                <div class="chat-input__tools">
+                  <button
+                    type="button"
+                    class="chat-input__tool"
+                    :class="{ 'is-disabled': chat.thinking }"
+                    :disabled="chat.thinking"
+                    aria-label="上传文件"
+                    title="上传文件"
+                    @click="triggerFile"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  </button>
+                  <input
+                    ref="fileInputEl"
+                    type="file"
+                    class="chat-input__file-input"
+                    multiple
+                    :accept="ACCEPTED_EXTS.join(',')"
+                    @change="onFilePick"
+                  />
+                  <!-- ============ 知识库绑定按钮 ============ -->
+                  <button
+                    type="button"
+                    class="chat-input__tool chat-input__tool--bind"
+                    :class="{ 'is-disabled': chat.thinking, 'is-bound': boundDocCount > 0 }"
+                    :disabled="chat.thinking"
+                    :aria-label="boundDocCount ? `已绑定 ${boundDocCount} 篇知识库` : '绑定知识库'"
+                    :title="boundDocCount ? `已绑定 ${boundDocCount} 篇知识库 · 点击管理` : '绑定知识库'"
+                    @click="openKnowledgeDrawer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <path d="M9 13h6M9 17h4" />
+                    </svg>
+                    <span v-if="boundDocCount" class="chat-input__tool-badge">{{ boundDocCount }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="chat-input__tool"
+                    :class="{
+                      'is-recording': voiceState === 'recording',
+                      'is-disabled': chat.thinking,
+                    }"
+                    :disabled="chat.thinking || !speechSupported"
+                    :aria-label="voiceState === 'recording' ? '停止录音' : '语音输入'"
+                    :title="!speechSupported ? '当前浏览器不支持语音识别' : (voiceState === 'recording' ? '停止录音' : '语音输入')"
+                    @click="toggleVoice"
+                  >
+                    <svg v-if="voiceState === 'recording'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="6" y="6" width="12" height="12" rx="2" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+                    </svg>
+                    <span v-if="voiceState === 'recording'" class="chat-input__rec-pulse" />
+                  </button>
+                </div>
+                <div class="chat-input__send">
+                  <!-- 增强提示词 -->
+                  <button
+                    type="button"
+                    class="chat-send chat-send--enhance"
+                    :class="{
+                      'is-disabled': chat.thinking || !input.trim() || enhancing,
+                      'is-loading': enhancing,
+                    }"
+                    :disabled="chat.thinking || !input.trim() || enhancing"
+                    aria-label="增强提示词"
+                    title="增强提示词"
+                    @click="onEnhancePrompt"
+                  >
+                    <svg v-if="!enhancing" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span v-else class="chat-input__tool-spinner" />
+                  </button>
+                  <!-- 发送 / 终止 按钮 -->
+                  <button
+                    v-if="!chat.thinking"
+                    type="submit"
+                    class="chat-send"
+                    :class="{ 'is-disabled': !canSend }"
+                    :disabled="!canSend"
+                    :aria-label="canSend ? '发送' : '请先输入内容'"
+                    :title="canSend ? '发送' : '请先输入内容'"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
+                    </svg>
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="chat-send chat-send--abort"
+                    aria-label="终止生成"
+                    title="终止生成"
+                    @click="onAbort"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="6" y="6" width="12" height="12" rx="1.5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="chat-input__foot">
               <span>当前员工 · {{ chat.employee?.name || '' }} · 知识库 12 份 · 工具 4 个</span>
@@ -484,11 +596,12 @@
               </span>
             </div>
           </form>
+          </template>
         </div>
 
-        <!-- 右：进程 / 文件 面板 -->
+        <!-- 右：进程 / 文件 面板（市场商机分析员隐藏）-->
         <transition name="panel-slide">
-          <aside v-if="panelOpen" class="chat-panel" :key="'panel'">
+          <aside v-if="panelOpen && !isMarketRadar" class="chat-panel" :key="'panel'">
             <div class="chat-panel__head">
               <div class="chat-panel__tabs" role="tablist">
                 <button
@@ -505,6 +618,13 @@
                   :aria-selected="activeTab === 'files'"
                   @click="setTab('files')"
                 >文件</button>
+                <button
+                  class="chat-panel__tab"
+                  :class="{ 'is-active': activeTab === 'preview' }"
+                  role="tab"
+                  :aria-selected="activeTab === 'preview'"
+                  @click="setTab('preview')"
+                >预览</button>
               </div>
               <button
                 class="iconbtn"
@@ -560,7 +680,7 @@
             </div>
 
             <!-- 文件面板 -->
-            <div v-show="activeTab === 'files'" class="chat-panel__body chat-panel__files" :class="{ 'is-preview-closed': !previewOpen }">
+            <div v-show="activeTab === 'files'" class="chat-panel__body chat-panel__files">
               <div class="files-tree">
                 <div class="files-tree__head">
                   <div class="files-tree__title">文件</div>
@@ -587,12 +707,6 @@
                     </button>
                   </div>
                 </div>
-                <input
-                  class="files-tree__search"
-                  type="text"
-                  placeholder="搜索文件…"
-                  aria-label="搜索文件"
-                />
                 <div class="files-tree__body">
                   <ul class="tree">
                     <TreeNode
@@ -607,6 +721,10 @@
                   </ul>
                 </div>
               </div>
+            </div>
+
+            <!-- 预览面板 -->
+            <div v-show="activeTab === 'preview'" class="chat-panel__body chat-panel__preview">
               <transition name="preview-slide">
                 <div v-if="previewOpen" class="files-preview" :key="selectedFile || 'empty'">
                   <div class="files-preview__head">
@@ -643,12 +761,18 @@
                     </template>
                   </div>
                   <div class="files-preview__foot">
-                    <span v-if="activeFilePreview.kind === 'csv'">共 {{ activeFilePreview.rows.toLocaleString() }} 行 · {{ activeFilePreview.size }}</span>
-                    <span v-else-if="activeFilePreview.kind === 'md'">Markdown · {{ activeFilePreview.size }}</span>
-                    <span v-else-if="activeFilePreview.kind === 'py'">Python · {{ activeFilePreview.size }}</span>
-                    <span v-else>文件 · {{ activeFilePreview.size }}</span>
-                    <span>·</span>
-                    <span>只读预览</span>
+                    <button
+                      class="preview-foot-btn"
+                      :class="{ 'is-active': !isEditing }"
+                      :disabled="isEditing"
+                      @click="isEditing = true"
+                    >编辑</button>
+                    <button
+                      class="preview-foot-btn"
+                      :class="{ 'is-active': isEditing }"
+                      :disabled="!isEditing"
+                      @click="isEditing = false"
+                    >保存</button>
                   </div>
                 </div>
               </transition>
@@ -657,29 +781,31 @@
         </transition>
       </section>
 
-      <!-- ============ 知识库引用上标浮层（仅市场商机分析员 · C.7）============ -->
-      <KnowledgeRef v-if="isMarketRadar" />
+      <!-- ============ 知识库引用上标浮层 ============ -->
+      <KnowledgeRef />
 
-      <!-- ============ 工具箱弹窗/抽屉（仅市场商机分析员 · B/C）============ -->
-      <DataSourceDialog     v-if="isMarketRadar" v-model="dataSourceDialogOpen" />
-      <PushDialog           v-if="isMarketRadar" v-model="pushDialogOpen" />
-      <KnowledgeBindDrawer  v-if="isMarketRadar" v-model="knowledgeDrawerOpen" />
+      <!-- ============ 工具箱弹窗/抽屉 ============ -->
+      <KnowledgeBindDrawer v-model="knowledgeDrawerOpen" />
     </div>
   </transition>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useChatStore } from '@/stores/chat'
 import TreeNode from '@/components/TreeNode.vue'
 import KnowledgeRef from '@/components/tools/KnowledgeRef.vue'
 /* ============ 市场商机分析员专用组件（仅 isMarketRadar 时按需挂载）============ */
-import DataSourceDialog from '@/components/tools/DataSourceDialog.vue'
-import PushDialog from '@/components/tools/PushDialog.vue'
+import DataSourcePanel from '@/components/tools/DataSourcePanel.vue'
+import BidAggregationPanel from '@/components/tools/BidAggregationPanel.vue'
+import DomainConfigPanel from '@/components/tools/DomainConfigPanel.vue'
+import BidAnalysisPanel from '@/components/tools/BidAnalysisPanel.vue'
 import KnowledgeBindDrawer from '@/components/tools/KnowledgeBindDrawer.vue'
 import MarketChart from '@/components/charts/MarketChart.vue'
 import ResultList from '@/components/charts/ResultList.vue'
 import DownloadBar from '@/components/tools/DownloadBar.vue'
+import { enhancePrompt } from '@/api/ai'
 
 const chat = useChatStore()
 const overlay = ref(null)
@@ -688,6 +814,7 @@ const textareaEl = ref(null)
 const fileInputEl = ref(null)
 const input = ref('')
 const isInputFocus = ref(false)
+const enhancing = ref(false)
 
 /* ============================================================
  * 市场商机分析员 · 隔离识别（B.1）
@@ -701,27 +828,25 @@ const isMarketRadar = computed(() => chat.employee?.id === 'market-radar-001')
 const toolboxOpen = ref(false)
 const toggleToolbox = () => { toolboxOpen.value = !toolboxOpen.value }
 
-/* 弹窗 / 抽屉开关（B.4） */
-const dataSourceDialogOpen = ref(false)
-const pushDialogOpen = ref(false)
+/* 内联面板状态（null = 显示对话，'datasource' = 数据源管理，'bidagg' = 标讯汇聚，'domaincfg' = 领域专业化配置，'bidanalysis' = 标讯分析） */
+const activePanel = ref(null)
 const knowledgeDrawerOpen = ref(false)
 
 /* 已绑定知识库条目（B.3 角标） */
 const boundDocCount = computed(() => (chat.boundDocs && chat.boundDocs.length) || 0)
 
-const openDataSourceDialog = () => { dataSourceDialogOpen.value = true }
-const openPushDialog      = () => { pushDialogOpen.value = true }
+const openDataSourcePanel = () => { activePanel.value = 'datasource' }
+const openBidAggregation  = () => { activePanel.value = 'bidagg' }
+const openDomainConfig    = () => { activePanel.value = 'domaincfg' }
+const openBidAnalysis     = () => { activePanel.value = 'bidanalysis' }
 const openKnowledgeDrawer = () => { knowledgeDrawerOpen.value = true }
-const closeDataSourceDialog = () => { dataSourceDialogOpen.value = false }
-const closePushDialog      = () => { pushDialogOpen.value = false }
-const closeKnowledgeDrawer = () => { knowledgeDrawerOpen.value = false }
+const closePanel          = () => { activePanel.value = null }
 
 /* 关闭 ChatOverlay 时同步重置所有新功能开关，避免污染下一次打开 */
 watch(() => chat.open, (open) => {
   if (!open) {
     toolboxOpen.value = false
-    dataSourceDialogOpen.value = false
-    pushDialogOpen.value = false
+    activePanel.value = null
     knowledgeDrawerOpen.value = false
   }
 })
@@ -890,7 +1015,7 @@ const placeholderText = computed(() => {
 
 /* ============ 右侧进程 / 文件面板 ============ */
 const panelOpen = ref(true)             // 右侧面板开关
-const activeTab = ref('process')         // 'process' | 'files'
+const activeTab = ref('process')         // 'process' | 'files' | 'preview'
 const expandedFolders = ref({            // 文件树展开状态
   'workspace': true,
   'workspace/scripts': true,
@@ -913,10 +1038,23 @@ function toggleCardCollapse(id) { collapsedCards.value[id] = !collapsedCards.val
 function renderInline(text) {
   if (!text) return ''
   let s = String(text)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  /* 市场商机分析员：将 <b>...</b> 语法高亮为关键信息（先占位再恢复，避免被转义） */
+  const highlights = []
+  if (isMarketRadar.value) {
+    s = s.replace(/<b>([^<]+)<\/b>/g, (m, g1) => {
+      highlights.push(g1)
+      return `__HIGHLIGHT__${highlights.length - 1}__`
+    })
+  }
+  s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/`([^`]+)`/g, '<code class="chat-md__inline">$1</code>')
   if (isMarketRadar.value) {
+    /* 恢复高亮占位 */
+    s = s.replace(/__HIGHLIGHT__(\d+)__/g, (m, idx) => {
+      const content = highlights[parseInt(idx, 10)]
+      return `<strong class="mr-highlight">${content}</strong>`
+    })
     /* [n] 知识库引用上标，n 为 1+ 整数。boundDocs 至少 1 条才显示上标样式 */
     if (boundDocCount.value > 0) {
       s = s.replace(/\[(\d+)\]/g, (m, n) => {
@@ -1063,6 +1201,7 @@ const fileTree = ref([
 
 /* ---------- 文件预览开关 + 按文件名动态生成预览内容 ---------- */
 const previewOpen = ref(true)         // 预览面板是否显示
+const isEditing = ref(false)          // 编辑/保存按钮切换
 const previewLoading = ref(false)     // 模拟加载状态
 let _previewTimer = null               // 模拟加载定时器句柄（用于关闭/切换时清理）
 
@@ -1254,6 +1393,7 @@ function isFolderOpen(id) {
 function selectFile(file) {
   if (!file) return
   selectedFile.value = file.name
+  activeTab.value = 'preview'
   // 打开预览 + 模拟加载
   previewOpen.value = true
   previewLoading.value = true
@@ -1279,6 +1419,7 @@ function closePreview() {
  */
 function openPreview() {
   if (!selectedFile.value) return
+  activeTab.value = 'preview'
   previewOpen.value = true
   previewLoading.value = true
   if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null }
@@ -1327,6 +1468,26 @@ function scrollToBottom() {
 /* 发送按钮可用：仅当有内容且不在生成中 */
 const canSend = computed(() => input.value.trim().length > 0 && !chat.thinking)
 
+/* ------------ 增强提示词 ------------ */
+async function onEnhancePrompt() {
+  const text = input.value.trim()
+  if (!text || enhancing.value) return
+  enhancing.value = true
+  try {
+    const { enhanced } = await enhancePrompt(text)
+    input.value = enhanced
+    await nextTick()
+    if (textareaEl.value) {
+      textareaEl.value.style.height = 'auto'
+      textareaEl.value.style.height = textareaEl.value.scrollHeight + 'px'
+    }
+  } catch (e) {
+    ElMessage.error('增强失败：' + (e?.message || '未知错误'))
+  } finally {
+    enhancing.value = false
+  }
+}
+
 function onSend() {
   if (!canSend.value) return
   const text = input.value.trim()
@@ -1355,8 +1516,8 @@ function onInput(e) {
 function autoResize(e) {
   const el = e?.target || textareaEl.value
   if (!el) return
-  el.style.height = '24px'
-  el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 96) + 'px'
 }
 function autoResizeDom() {
   nextTick(() => autoResize())
@@ -1414,15 +1575,17 @@ watch(() => chat.messages.length, () => scrollToBottom())
   inset: 0;
   z-index: 1000;
   background: var(--bg);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(217, 70, 239, 0.03) 0%, transparent 50%);
   display: grid;
   grid-template-columns: 280px 1fr;
   grid-template-rows: 100vh;
   outline: none;
   overflow: hidden;
-  animation: chatZoom 280ms cubic-bezier(.4,0,.2,1);
+  animation: chatZoom 320ms cubic-bezier(.2, .8, .2, 1);
 }
 @keyframes chatZoom {
-  from { opacity: 0; transform: scale(0.985); }
+  from { opacity: 0; transform: scale(0.975) translateY(4px); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -1434,6 +1597,16 @@ watch(() => chat.messages.length, () => scrollToBottom())
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
+}
+.chat-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0; right: -1px;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent 0%, var(--accent) 50%, transparent 100%);
+  opacity: 0.15;
 }
 .chat-sidebar__head {
   display: flex;
@@ -1443,7 +1616,7 @@ watch(() => chat.messages.length, () => scrollToBottom())
   border-bottom: 1px solid var(--line);
   margin-bottom: 16px;
 }
-.chat-sidebar__title { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+.chat-sidebar__title { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; letter-spacing: -0.01em; }
 .chat-history { flex: 1; overflow-y: auto; }
 .chat-history__group { margin-bottom: 16px; }
 
@@ -1472,12 +1645,13 @@ watch(() => chat.messages.length, () => scrollToBottom())
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease);
+  transition: background 180ms var(--ease), border-color 180ms var(--ease), color 180ms var(--ease), box-shadow 180ms var(--ease);
 }
 .chat-sidebar__toolbox-btn:hover {
   background: var(--accent-soft);
   border-color: rgba(139, 92, 246, 0.35);
   color: var(--accent);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
 }
 .chat-sidebar__toolbox-btn.is-open {
   background: var(--accent-soft);
@@ -1564,12 +1738,13 @@ watch(() => chat.messages.length, () => scrollToBottom())
   border-radius: 8px;
   cursor: pointer;
   font-size: 12.5px;
+  font-weight: 500;
   color: var(--ink-2);
   margin-bottom: 2px;
-  transition: background 160ms var(--ease), color 160ms var(--ease);
+  transition: background 180ms var(--ease), color 180ms var(--ease), box-shadow 180ms var(--ease);
 }
-.chat-history__item:hover { background: var(--surface-2); color: var(--ink); }
-.chat-history__item.is-active { background: var(--accent-soft); color: var(--accent); }
+.chat-history__item:hover { background: var(--surface-2); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.chat-history__item.is-active { background: var(--accent-soft); color: var(--accent); box-shadow: 0 1px 6px rgba(139, 92, 246, 0.12); }
 .chat-history__item .preview {
   color: var(--ink-3);
   font-size: 11px;
@@ -1613,6 +1788,17 @@ watch(() => chat.messages.length, () => scrollToBottom())
   gap: 12px;
   background: var(--surface);
   flex-shrink: 0;
+  position: relative;
+}
+.chat-main__head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 28px;
+  right: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
+  opacity: 0.08;
 }
 .chat-main__agent { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .chat-main__agent-avatar {
@@ -1684,12 +1870,13 @@ watch(() => chat.messages.length, () => scrollToBottom())
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 12px var(--accent-glow);
+  box-shadow: 0 4px 16px var(--accent-glow), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 .chat-msg--bot .chat-bubble {
   background: var(--surface);
   border: 1px solid var(--line);
   border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 .chat-msg__time {
   font-size: 10.5px;
@@ -1702,13 +1889,14 @@ watch(() => chat.messages.length, () => scrollToBottom())
 .chat-step {
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px 14px;
   margin-top: 4px;
   font-size: 12px;
   align-self: flex-start;
   max-width: 80%;
   animation: msgIn 280ms cubic-bezier(.4,0,.2,1) both;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 .chat-step__head {
   display: flex;
@@ -1728,19 +1916,23 @@ watch(() => chat.messages.length, () => scrollToBottom())
 
 .chat-suggest { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .chat-suggest button {
-  padding: 6px 12px;
+  padding: 6px 14px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 500;
   color: var(--ink-2);
-  transition: all 160ms var(--ease);
+  transition: all 180ms var(--ease);
   cursor: pointer;
+  letter-spacing: 0.01em;
 }
 .chat-suggest button:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-soft);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
 }
 
 /* ============================================================
@@ -1749,12 +1941,13 @@ watch(() => chat.messages.length, () => scrollToBottom())
 .chat-process-card {
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 14px 16px 12px;
   align-self: stretch;
   max-width: 90%;
   margin: 4px 0 2px;
   animation: msgIn 320ms cubic-bezier(.4,0,.2,1) both;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 .chat-process-card__head {
   display: flex;
@@ -1873,12 +2066,13 @@ watch(() => chat.messages.length, () => scrollToBottom())
 .chat-md {
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 14px 18px 12px;
   align-self: stretch;
   max-width: 90%;
   margin: 4px 0 2px;
   animation: msgIn 360ms cubic-bezier(.4,0,.2,1) both;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 .chat-md__head {
   display: flex;
@@ -1917,6 +2111,40 @@ watch(() => chat.messages.length, () => scrollToBottom())
 }
 .chat-md__p { margin: 4px 0; }
 .chat-md__p strong { color: var(--ink); font-weight: 600; }
+.chat-md__p strong.mr-highlight,
+.chat-md__ol li strong.mr-highlight,
+.chat-md__ul li strong.mr-highlight {
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.chat-md__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.chat-md__table th,
+.chat-md__table td {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.chat-md__table th {
+  background: var(--surface-2);
+  font-weight: 600;
+  color: var(--ink);
+}
+.chat-md__table td {
+  color: var(--ink-2);
+}
+.chat-md__table strong {
+  color: var(--accent);
+  font-weight: 600;
+}
 .chat-md__inline {
   font-family: var(--font-mono);
   font-size: 0.92em;
@@ -2004,6 +2232,53 @@ watch(() => chat.messages.length, () => scrollToBottom())
 .chat-md__regen:hover { color: var(--accent); border-color: var(--accent); }
 .chat-md__regen svg { width: 12px; height: 12px; }
 
+/* ---------- 欢迎页（无消息时居中显示） ---------- */
+.chat-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 28px;
+  animation: welcomeFadeIn 0.4s ease-out;
+  min-height: 0;
+}
+.chat-welcome__title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.chat-welcome__subtitle {
+  font-size: 15px;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.chat-welcome__input {
+  width: 100%;
+  max-width: 720px;
+}
+.chat-welcome__input .chat-input__box {
+  padding: 16px 18px;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
+  border-color: var(--line-2);
+}
+.chat-welcome__input .chat-input__field textarea {
+  font-size: 15px;
+}
+@keyframes welcomeFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ---------- 输入框 ---------- */
 .chat-input {
   /* 始终可见：禁止任何隐藏/显示控制 */
@@ -2022,37 +2297,65 @@ watch(() => chat.messages.length, () => scrollToBottom())
   z-index: 5;
   box-shadow: 0 -1px 0 var(--line);
 }
+.chat-input::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 28px;
+  right: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
+  opacity: 0.06;
+}
 /* aside 打开时，form 宽度自适应，跟随对话区收缩 */
 .chat-main.is-panel-open .chat-input {
   width: auto;
 }
 .chat-input__box {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px 14px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 14px;
-  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease);
+  transition: border-color 200ms var(--ease), box-shadow 240ms var(--ease), background 200ms var(--ease);
+}
+.chat-input__box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 4px 20px rgba(139, 92, 246, 0.08);
+  background: var(--surface);
+}
+.chat-input__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chat-input__field {
+  height: 96px;
+  overflow-y: auto;
+}
+.chat-input__field textarea {
+  height: auto;
+  min-height: 96px;
+  max-height: 96px;
 }
 .chat-input__box:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 .chat-input__box textarea {
-  flex: 1;
   background: transparent;
   border: 0;
   outline: 0;
   resize: none;
-  min-height: 24px;
-  max-height: 160px;
+  width: 100%;
   font-size: 14px;
   color: var(--ink);
   line-height: 1.5;
-  padding: 4px 0;
+  padding: 0;
   font-family: inherit;
+  display: block;
 }
 .chat-input__box textarea::placeholder { color: var(--ink-3); }
 .chat-input__tools {
@@ -2074,7 +2377,8 @@ watch(() => chat.messages.length, () => scrollToBottom())
   justify-content: center;
   transition: all 160ms var(--ease);
 }
-.chat-input__tools button:hover { color: var(--ink); background: var(--surface-3); }
+.chat-input__tools button:hover { color: var(--ink); background: var(--surface-3); transform: translateY(-1px); }
+.chat-input__tools button:active { transform: translateY(0); }
 .chat-input__tools svg { width: 18px; height: 18px; }
 .chat-send {
   width: 36px;
@@ -2087,9 +2391,9 @@ watch(() => chat.messages.length, () => scrollToBottom())
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 160ms var(--ease), box-shadow 160ms var(--ease),
-              opacity 160ms var(--ease), filter 160ms var(--ease);
-  box-shadow: 0 4px 14px var(--accent-glow);
+  transition: transform 180ms var(--ease-spring), box-shadow 200ms var(--ease),
+              opacity 180ms var(--ease), filter 180ms var(--ease);
+  box-shadow: 0 4px 14px var(--accent-glow), 0 1px 3px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
   position: relative;
 }
@@ -2127,6 +2431,27 @@ watch(() => chat.messages.length, () => scrollToBottom())
   100% { transform: scale(1.3); opacity: 0; }
 }
 .chat-send svg { width: 18px; height: 18px; }
+.chat-send--enhance {
+  background: transparent;
+  color: var(--ink-3);
+  box-shadow: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  margin-right: 2px;
+}
+.chat-send--enhance:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--ink);
+  transform: none;
+}
+.chat-send--enhance:disabled,
+.chat-send--enhance.is-disabled {
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  opacity: 0.35;
+}
 
 /* ---------- 工具按钮（文件 / 语音）---------- */
 .chat-input__tool {
@@ -2156,6 +2481,13 @@ watch(() => chat.messages.length, () => scrollToBottom())
 .chat-input__tool.is-recording {
   color: var(--danger);
   background: rgba(248, 113, 113, 0.12);
+}
+.chat-input__tool-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 720ms linear infinite;
 }
 .chat-input__rec-pulse {
   position: absolute;
@@ -2421,13 +2753,16 @@ watch(() => chat.messages.length, () => scrollToBottom())
 /* ---------- 面板内容区 ---------- */
 .chat-panel__body {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
 }
 
 /* ============================================================
  * 当前进程：时间线步骤
  * ============================================================ */
+.chat-panel__process {
+  overflow-y: auto;
+}
 .process-list {
   padding: 14px 12px 32px;
   display: flex;
@@ -2615,17 +2950,24 @@ watch(() => chat.messages.length, () => scrollToBottom())
  * 文件面板：文件树 + 预览
  * ============================================================ */
 .chat-panel__files {
-  display: grid;
-  grid-template-rows: minmax(0, 45%) minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 .files-tree {
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   min-height: 0;
+  flex: 1;
+}
+
+/* 预览面板 */
+.chat-panel__preview {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 .files-tree__head {
   display: flex;
@@ -2713,6 +3055,17 @@ watch(() => chat.messages.length, () => scrollToBottom())
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   flex-shrink: 0;
+  position: relative;
+}
+.files-preview__head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
+  opacity: 0.12;
 }
 .files-preview__crumb {
   display: flex;
@@ -2796,6 +3149,38 @@ watch(() => chat.messages.length, () => scrollToBottom())
   font-family: var(--font-mono);
   background: var(--surface);
   flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+}
+.preview-foot-btn {
+  padding: 4px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+  user-select: none;
+}
+.preview-foot-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.preview-foot-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.preview-foot-btn.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.preview-foot-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
 }
 
 /* ============================================================
@@ -2823,14 +3208,6 @@ watch(() => chat.messages.length, () => scrollToBottom())
   opacity: 0;
   transform: translateY(6px) scaleY(0.98);
   transform-origin: top center;
-}
-
-/* 关闭态：files-tree 占据整个高度，文件预览完全隐藏 */
-.chat-panel__files.is-preview-closed {
-  grid-template-rows: minmax(0, 1fr);
-}
-.chat-panel__files.is-preview-closed .files-tree {
-  border-bottom: 0;
 }
 
 /* ============================================================

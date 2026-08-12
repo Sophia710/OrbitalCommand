@@ -31,7 +31,6 @@ registerRoute('GET /employees/list', {
       )
     }
     if (params?.sort === 'usage')        list.sort((a, b) => b.usage - a.usage)
-    else if (params?.sort === 'rating')  list.sort((a, b) => b.rating - a.rating)
     else if (params?.sort === 'newest')  list.sort((a, b) => b.createdAt - a.createdAt)
     return page(list, Number(params?.pageNo || 1), Number(params?.pageSize || 24))
   },
@@ -100,8 +99,6 @@ registerRoute('POST /employees/create', {
       activated: false,
       version: '0.1.0',
       usage: 0,
-      rating: 0,
-      reviews: 0,
       systemPrompt: body.systemPrompt || '',
       greeting: body.greeting || '',
       kb: body.kb || [],

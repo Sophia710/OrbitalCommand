@@ -1778,7 +1778,7 @@
           el('div', { class: 'chat-main__agent-avatar', style: '--c1:' + emp.c.c1 + ';--c2:' + emp.c.c2 }, emp.name.slice(0, 1)),
           el('div', {},
             el('div', { class: 'chat-main__agent-name' }, emp.name),
-            el('div', { class: 'chat-main__agent-status' }, '● 在线 · 推理中' ))),
+            el('div', { class: 'chat-main__agent-status' }, '● 在线 ' ))),
         el('div', { style: 'display:flex;align-items:center;gap:8px' },
           btn('查看流程', 'ghost', null, ICON('activity')),
           btn('新建任务', 'outline', null, ICON('plus')))),

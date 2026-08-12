@@ -203,7 +203,6 @@ const domainOpts = [
 const sortOpts = [
   { value: '',        label: '默认' },
   { value: 'usage',   label: '按调用次数' },
-  { value: 'rating',  label: '按评分' },
   { value: 'newest',  label: '按最新' },
 ]
 

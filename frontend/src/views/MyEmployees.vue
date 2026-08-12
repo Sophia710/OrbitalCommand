@@ -58,12 +58,12 @@
               <span>调用次数</span>
             </div>
             <div class="my-emp-card__stat">
-              <b>{{ e.doc || 0 }}</b>
-              <span>知识库</span>
+              <b>{{ e.skills?.length || 0 }}</b>
+              <span>技能</span>
             </div>
             <div class="my-emp-card__stat">
-              <b>{{ e.rating ? e.rating.toFixed(1) : '—' }}</b>
-              <span>评分</span>
+              <b>{{ e.doc || 0 }}</b>
+              <span>知识库</span>
             </div>
           </div>
           <div class="my-emp-card__actions">

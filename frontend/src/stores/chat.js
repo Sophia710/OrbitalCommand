@@ -34,6 +34,32 @@ const MOCK_HISTORY = [
   },
 ]
 
+/* 市场商机分析员专用历史对话 */
+const MR_HISTORY = [
+  {
+    date: '今天',
+    items: [
+      { id: 'mr-h1', title: '找遥感、卫星相关的招标商机', preview: '本次检索覆盖 4 类数据源，命中 86 条有效商机信号…', active: true },
+      { id: 'mr-h2', title: '近期遥感领域招标商机分析', preview: '重点分布在北京、四川、陕西，总金额约 3.86 亿…' },
+      { id: 'mr-h3', title: '卫星通信终端采购项目跟踪', preview: '广东海事局项目预算 1860 万，建议本周内组织踏勘…' },
+    ],
+  },
+  {
+    date: '昨天',
+    items: [
+      { id: 'mr-h4', title: '自然资源厅遥感影像统筹', preview: '四川省年度卫星遥感影像采购，单价预算 1.2 亿…' },
+      { id: 'mr-h5', title: '生态环境遥感监测项目', preview: 'PM2.5、O3 等污染物遥感反演，预算 480 万…' },
+    ],
+  },
+  {
+    date: '本周',
+    items: [
+      { id: 'mr-h6', title: 'InSAR 形变监测服务商机', preview: '全国 12 个重点断裂带监测，预算 1450 万/年…' },
+      { id: 'mr-h7', title: '森林防火卫星监测能力', preview: '红外/高分融合火点识别平台，预算 660 万…' },
+    ],
+  },
+]
+
 function buildInitialMessages(emp) {
   return [
     { id: newId(), who: 'bot', text: `你好，我是「${emp.name}」。${emp.description || ''}你可以直接描述任务，我会调用工具与知识库辅助完成。`, t: '19:36:52' },
@@ -189,6 +215,7 @@ export const useChatStore = defineStore('chat', {
 
       if (emp?.id === 'market-radar-001') {
         /* ============ 市场商机分析员（A.2 / D.2）============ */
+        this.history = MR_HISTORY
         this.messages = [
           ...buildInitialMessages(emp),
           ...buildMarketRadarMessages(emp.defaultQuery),
@@ -208,6 +235,7 @@ export const useChatStore = defineStore('chat', {
         }
       } else {
         /* ============ 其他员工（行为不变）============ */
+        this.history = MOCK_HISTORY
         this.messages = [
           ...buildInitialMessages(emp),
           ...MOCK_DIALOG,
@@ -283,7 +311,15 @@ export const useChatStore = defineStore('chat', {
       })
     },
     newSession() {
-      if (this.employee) this.messages = buildInitialMessages(this.employee)
+      if (!this.employee) return
+      _clearAllTimers()
+      this.messages = []
+      this.thinking = false
+      this.boundDocs = []
+      this.toolboxOpen = false
+      this.dataSourceDialogOpen = false
+      this.pushDialogOpen = false
+      this.knowledgeDrawerOpen = false
     },
     closeChat() {
       _clearAllTimers()

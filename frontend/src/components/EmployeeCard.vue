@@ -55,9 +55,6 @@
       <span>
         <b>{{ formatUsers(employee.usage) }}</b> 用户 · <b>{{ formatCalls(employee.usage) }}</b> 调用
       </span>
-      <span class="emp-card__rating">
-        <i>★</i> {{ employee.rating ? employee.rating.toFixed(1) : '—' }}
-      </span>
     </div>
 
     <div class="emp-card__actions">
@@ -494,16 +491,6 @@ function formatCalls(n) {
 .emp-card--super .emp-card__meta {
   border-top-color: rgba(139, 92, 246, 0.22);
 }
-.emp-card__rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.emp-card__rating i {
-  color: var(--warn);
-  font-style: normal;
-}
-
 /* ---------- 操作区 ---------- */
 .emp-card__actions {
   display: flex;
